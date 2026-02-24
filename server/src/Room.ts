@@ -424,9 +424,11 @@ export class Room {
 
   openShop(): void {
     const money: { [playerId: string]: number } = {};
+    const jetFuelPacks: { [playerId: string]: number } = {};
 
     for (const [playerId, player] of this.players) {
       money[playerId] = player.money;
+      jetFuelPacks[playerId] = Math.min(3, Math.ceil(player.jetFuelSeconds / PHYSICS.JUMP_JET_FUEL_PER_PURCHASE));
     }
 
     this.broadcast({
@@ -434,6 +436,7 @@ export class Room {
       payload: {
         money,
         timeRemaining: GAME.SHOP_DURATION,
+        jetFuelPacks,
       },
     });
 

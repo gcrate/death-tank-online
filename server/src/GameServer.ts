@@ -4,7 +4,7 @@ import {
   ClientMessage, ServerMessage, LobbyState, RoomSummary, RoomConfig,
   WeaponType, ItemType,
 } from '../../shared/protocol';
-import { GAME } from './constants';
+import { GAME, PHYSICS } from './constants';
 import { Room } from './Room';
 import { Player } from './Player';
 
@@ -194,12 +194,18 @@ export class GameServer {
 
         const success = room.handlePurchase(playerId, message.payload.itemType);
         if (success && player) {
-          // Broadcast updated money to all players
+          // Broadcast updated money + fuel packs to all players
           const shopPayload = {
             money: Object.fromEntries(
               Array.from(room.players.entries()).map(([id, p]) => [id, p.money])
             ),
             timeRemaining: GAME.SHOP_DURATION,
+            jetFuelPacks: Object.fromEntries(
+              Array.from(room.players.entries()).map(([id, p]) => [
+                id,
+                Math.min(3, Math.ceil(p.jetFuelSeconds / PHYSICS.JUMP_JET_FUEL_PER_PURCHASE)),
+              ])
+            ),
           };
           room.broadcast({ type: 'SHOP_OPEN', payload: shopPayload });
         } else if (!success && player) {

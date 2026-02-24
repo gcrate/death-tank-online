@@ -191,6 +191,7 @@ export interface RoundEarnings {
 export interface ShopPayload {
   money: { [playerId: string]: number };
   timeRemaining: number;
+  jetFuelPacks: { [playerId: string]: number };  // 0–3, authoritative pack count per player
 }
 
 export interface InventoryState {
