@@ -1,6 +1,6 @@
 import {
   ServerMessage, GameState, PlayerInfo, RoomState, ShopPayload,
-  ItemType, WeaponType, TankState, RoomConfig,
+  ItemType, WeaponType, TankState, RoomConfig, RoundEarnings,
 } from '../../shared/protocol';
 import { NetworkClient } from './NetworkClient';
 import { Renderer } from './Renderer';
@@ -10,7 +10,7 @@ import { AudioManager } from './AudioManager';
 import { UI } from './UI';
 import { ActiveExplosion } from './types';
 
-type GamePhase = 'lobby' | 'room' | 'playing' | 'shop' | 'gameover';
+type GamePhase = 'lobby' | 'room' | 'playing' | 'score_screen' | 'shop' | 'gameover';
 
 export class Game {
   private network: NetworkClient;
@@ -52,6 +52,17 @@ export class Game {
   private roundResultWinner: string | null = null;
   private roundResultName: string = '';
   private showRoundResult: boolean = false;
+
+  // Score screen
+  private scoreScreen: {
+    active: boolean;
+    winnerId: string | null;
+    kills: { [killerId: string]: string[] };
+    earnings: { [playerId: string]: RoundEarnings };
+    roundNumber: number;
+    startTime: number;
+    mySkipped: boolean;
+  } = { active: false, winnerId: null, kills: {}, earnings: {}, roundNumber: 0, startTime: 0, mySkipped: false };
 
   // Timings
   private lastTime: number = 0;
@@ -168,6 +179,14 @@ export class Game {
   private setupChatHandlers(): void {
     this.chatInput = document.getElementById('chat-input') as HTMLInputElement;
     const chatRow = document.getElementById('chat-input-row');
+
+    document.addEventListener('keydown', (e) => {
+      if (this.phase === 'score_screen' && e.key === ' ' && !this.scoreScreen.mySkipped) {
+        e.preventDefault();
+        this.scoreScreen.mySkipped = true;
+        this.network.send({ type: 'SKIP_SCORE' });
+      }
+    });
 
     this.input.onChatOpen = () => {
       if (this.phase !== 'playing') return;
@@ -368,7 +387,7 @@ export class Game {
     });
 
     this.network.on('ROUND_END', (msg) => {
-      const { winnerId, scores } = msg.payload;
+      const { winnerId, scores, kills, earnings } = msg.payload;
 
       // Update player scores
       if (this.localRoom) {
@@ -379,18 +398,25 @@ export class Game {
         }
       }
 
-      // Show round result
-      const winner = winnerId ? this.players.find(p => p.id === winnerId) : null;
-      this.roundResultWinner = winnerId;
-      this.roundResultName = winner?.name || '';
-      this.showRoundResult = true;
-      this.roundResultTime = performance.now() / 1000;
+      // Enter score screen phase
+      this.phase = 'score_screen';
+      this.showRoundResult = false;
+      this.scoreScreen = {
+        active: true,
+        winnerId,
+        kills: kills ?? {},
+        earnings: earnings ?? {},
+        roundNumber: this.roundNumber,
+        startTime: performance.now(),
+        mySkipped: false,
+      };
     });
 
     this.network.on('SHOP_OPEN', (msg) => {
       this.shopPayload = msg.payload;
       this.phase = 'shop';
       this.showRoundResult = false;
+      this.scoreScreen.active = false;
 
       // Strip depleted weapons and per-round items (mirrors server endRound cleanup)
       this.localInventory.weapons = this.localInventory.weapons.filter(w => w.ammo === -1 || w.ammo > 0);
@@ -480,7 +506,7 @@ export class Game {
   private render(now: number): void {
     const nowSec = now / 1000;
 
-    if (this.phase === 'playing' || this.phase === 'shop') {
+    if (this.phase === 'playing' || this.phase === 'score_screen' || this.phase === 'shop') {
       this.renderer.beginFrame();
       this.renderer.clear();
 
@@ -544,6 +570,21 @@ export class Game {
 
       if (this.showRoundResult && (nowSec - this.roundResultTime) < 4) {
         this.renderer.drawRoundResult(this.roundResultWinner, this.roundResultName);
+      }
+
+      // Score screen overlay
+      if (this.phase === 'score_screen' && this.scoreScreen.active) {
+        const elapsed = (now - this.scoreScreen.startTime) / 1000;
+        const timeRemaining = Math.max(0, 10 - elapsed);
+        this.renderer.drawScoreScreen(
+          this.players,
+          this.scoreScreen.kills,
+          this.scoreScreen.earnings,
+          this.scoreScreen.roundNumber,
+          timeRemaining,
+          this.localId,
+          this.scoreScreen.mySkipped
+        );
       }
 
       this.renderer.endFrame();

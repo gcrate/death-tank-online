@@ -34,6 +34,7 @@ export type ClientMessage =
   | { type: 'INPUT'; payload: InputState }
   | { type: 'PURCHASE'; payload: { itemType: WeaponType | ItemType } }
   | { type: 'SHOP_READY' }
+  | { type: 'SKIP_SCORE' }
   | { type: 'CHAT'; payload: { message: string } };
 
 export interface RoomConfig {
@@ -175,6 +176,7 @@ export interface RoundEndPayload {
   scores: { [playerId: string]: number };
   groovy: boolean;
   groovyPlayerId?: string;
+  kills: { [killerId: string]: string[] };  // killerId -> victimIds this round
 }
 
 export interface RoundEarnings {

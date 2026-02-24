@@ -1,4 +1,4 @@
-import { TankState, ProjectileState, PlayerInfo, WeaponType } from '../../shared/protocol';
+import { TankState, ProjectileState, PlayerInfo, WeaponType, RoundEarnings } from '../../shared/protocol';
 import { ParticleSystem } from './ParticleSystem';
 import { ActiveExplosion } from './types';
 
@@ -764,5 +764,156 @@ export class Renderer {
     this.ctx.fillStyle = '#f00';
     this.ctx.fillText(text, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100);
     this.ctx.restore();
+  }
+
+  drawScoreScreen(
+    players: PlayerInfo[],
+    kills: { [killerId: string]: string[] },
+    earnings: { [playerId: string]: RoundEarnings },
+    roundNumber: number,
+    timeRemaining: number,
+    localId: string,
+    mySkipped: boolean
+  ): void {
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Title
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffff00';
+    ctx.font = 'bold 38px monospace';
+    ctx.fillText(`ROUND ${roundNumber} RESULTS`, CANVAS_WIDTH / 2, 58);
+
+    // Separator
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, 74);
+    ctx.lineTo(CANVAS_WIDTH - 80, 74);
+    ctx.stroke();
+
+    // Determine max score for #1 badge
+    const maxScore = players.reduce((m, p) => Math.max(m, p.score), 0);
+
+    // Sort players by score descending
+    const sorted = [...players].sort((a, b) => b.score - a.score);
+
+    const rowH = Math.min(80, Math.floor((CANVAS_HEIGHT - 200) / Math.max(sorted.length, 1)));
+    const startY = 90;
+
+    sorted.forEach((player, rank) => {
+      const ry = startY + rank * rowH;
+      const isLocal = player.id === localId;
+      const playerKills = kills[player.id] || [];
+      const playerEarnings = earnings[player.id];
+      const roundScore = playerEarnings
+        ? playerEarnings.total - playerEarnings.participationBonus
+        : 0;
+
+      // Local player row highlight
+      if (isLocal) {
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.07)';
+        ctx.fillRect(75, ry, CANVAS_WIDTH - 150, rowH - 4);
+      }
+
+      const midY = ry + rowH / 2;
+
+      // Rank number
+      const isFirst = rank === 0;
+      ctx.fillStyle = isFirst ? '#ffd700' : '#888';
+      ctx.font = `bold ${isFirst ? 26 : 20}px monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillText(`#${rank + 1}`, 128, midY + 8);
+
+      // Color circle
+      ctx.fillStyle = player.color;
+      ctx.beginPath();
+      ctx.arc(150, midY, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Player name
+      ctx.fillStyle = isLocal ? '#ffff00' : '#ffffff';
+      ctx.font = `${isLocal ? 'bold ' : ''}18px monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText(player.name.slice(0, 14), 170, midY + 7);
+
+      // Kill icons
+      const killStartX = 430;
+      playerKills.forEach((victimId, ki) => {
+        const victim = players.find(p => p.id === victimId);
+        if (!victim) return;
+        const ix = killStartX + ki * 40;
+        const iy = midY - 14;
+
+        // #1 badge if victim has highest score
+        if (maxScore > 0 && victim.score >= maxScore) {
+          ctx.fillStyle = '#ffd700';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('#1', ix + 12, iy - 1);
+        }
+
+        // Mini tank hull (victim's color)
+        ctx.fillStyle = victim.color;
+        ctx.fillRect(ix, iy + 7, 24, 7);
+        // Dome
+        ctx.beginPath();
+        ctx.ellipse(ix + 12, iy + 7, 7, 4, 0, Math.PI, 0);
+        ctx.fill();
+        // Tracks
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(ix - 2, iy + 12, 28, 4);
+      });
+
+      // Round score earned (excluding participation bonus)
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillStyle = roundScore > 0 ? '#00ee00' : '#444';
+      ctx.fillText(`+${roundScore}`, 820, midY + 7);
+
+      // Overall score
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px monospace';
+      ctx.fillText(`${player.score}`, 920, midY + 9);
+      ctx.fillStyle = '#666';
+      ctx.font = '12px monospace';
+      ctx.fillText('pts', 950, midY + 9);
+    });
+
+    // Footer separator
+    const footerY = CANVAS_HEIGHT - 85;
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, footerY);
+    ctx.lineTo(CANVAS_WIDTH - 80, footerY);
+    ctx.stroke();
+
+    // Countdown
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '17px monospace';
+    ctx.fillText(
+      timeRemaining > 0 ? `Shop opens in ${Math.ceil(timeRemaining)}s` : 'Opening shop...',
+      CANVAS_WIDTH / 2,
+      footerY + 28
+    );
+
+    // Skip hint
+    if (mySkipped) {
+      ctx.fillStyle = '#666666';
+      ctx.font = '15px monospace';
+      ctx.fillText('Waiting for other players...', CANVAS_WIDTH / 2, footerY + 52);
+    } else {
+      ctx.fillStyle = '#00cccc';
+      ctx.font = '15px monospace';
+      ctx.fillText('[Space] Skip to shop', CANVAS_WIDTH / 2, footerY + 52);
+    }
+
+    ctx.restore();
   }
 }

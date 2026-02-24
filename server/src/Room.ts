@@ -1,7 +1,7 @@
 import {
   RoomConfig, RoomState, PlayerInfo,
   ServerMessage, WeaponType, ItemType, InventoryState,
-  ShopPayload, InputState,
+  ShopPayload, InputState, RoundEarnings,
 } from '../../shared/protocol';
 import { GAME, TERRAIN, COMBAT, PHYSICS } from './constants';
 import { WEAPONS } from './Weapon';
@@ -23,7 +23,7 @@ export class Room {
   players: Map<string, Player> = new Map();
   hostId: string;
 
-  state: 'lobby' | 'playing' | 'shopping' | 'ended' = 'lobby';
+  state: 'lobby' | 'playing' | 'score_screen' | 'shopping' | 'ended' = 'lobby';
   currentRound: number = 0;
   engine: GameEngine | null = null;
   terrain: Terrain | null = null;
@@ -31,7 +31,9 @@ export class Room {
   tick: number = 0;
   tickInterval: ReturnType<typeof setInterval> | null = null;
   shopTimer: ReturnType<typeof setTimeout> | null = null;
+  scoreScreenTimer: ReturnType<typeof setTimeout> | null = null;
   shopReadyCount: number = 0;
+  scoreSkipSet: Set<string> = new Set();
 
   kills: Map<string, string[]> = new Map();       // killerId -> victimIds
   scores: Map<string, number> = new Map();
@@ -335,8 +337,6 @@ export class Room {
       this.tickInterval = null;
     }
 
-    this.state = 'shopping';
-
     // Calculate earnings
     const leaderId = determineLeader(this.scores);
     const earnings: { [playerId: string]: RoundEarnings } = {};
@@ -363,9 +363,8 @@ export class Room {
       const prevKills = this.totalKills.get(playerId) || 0;
       this.totalKills.set(playerId, prevKills + playerKills.length);
 
-      if (survived) {
-        this.scores.set(playerId, (this.scores.get(playerId) || 0) + 1);
-      }
+      const scoreEarned = roundEarnings.total - roundEarnings.participationBonus;
+      this.scores.set(playerId, (this.scores.get(playerId) || 0) + scoreEarned);
 
       if (roundEarnings.groovyBonus > 0) {
         groovyPlayerId = playerId;
@@ -387,6 +386,7 @@ export class Room {
         scores: Object.fromEntries(this.scores),
         groovy,
         groovyPlayerId,
+        kills: Object.fromEntries(this.kills),
       },
     });
 
@@ -398,7 +398,7 @@ export class Room {
 
     // Save tank state back to player so it persists into the next round
     for (const [playerId, player] of this.players) {
-      const tank = this.engine.tanks.get(playerId);
+      const tank = this.engine!.tanks.get(playerId);
       if (!tank) continue;
 
       // Carry forward remaining weapon ammo (so starting inventory only applies to round 1)
@@ -418,11 +418,29 @@ export class Room {
       player.items.delete(ItemType.TARGETING_COMPUTER);
     }
 
-    // Open shop
-    this.openShop();
+    // Show score screen for 10 seconds, then open shop
+    this.state = 'score_screen';
+    this.scoreSkipSet.clear();
+    this.scoreScreenTimer = setTimeout(() => {
+      this.scoreScreenTimer = null;
+      this.openShop();
+    }, 10000);
+  }
+
+  handleScoreSkip(playerId: string): void {
+    if (this.state !== 'score_screen') return;
+    this.scoreSkipSet.add(playerId);
+    if (this.scoreSkipSet.size >= this.players.size) {
+      if (this.scoreScreenTimer) {
+        clearTimeout(this.scoreScreenTimer);
+        this.scoreScreenTimer = null;
+      }
+      this.openShop();
+    }
   }
 
   openShop(): void {
+    this.state = 'shopping';
     const money: { [playerId: string]: number } = {};
     const jetFuelPacks: { [playerId: string]: number } = {};
 
@@ -537,5 +555,6 @@ export class Room {
   cleanup(): void {
     if (this.tickInterval) clearInterval(this.tickInterval);
     if (this.shopTimer) clearTimeout(this.shopTimer);
+    if (this.scoreScreenTimer) clearTimeout(this.scoreScreenTimer);
   }
 }

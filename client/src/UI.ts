@@ -31,7 +31,7 @@ export class UI {
 
   // Callbacks
   onJoinLobby: ((name: string) => void) | null = null;
-  onCreateRoom: ((config: { rounds: number; startingMoney: number; startingInventory: string }) => void) | null = null;
+  onCreateRoom: ((config: { rounds: number; startingMoney: number; startingInventory: 'none' | 'missiles' | 'heavy' | 'everything' }) => void) | null = null;
   onJoinRoom: ((roomId: string) => void) | null = null;
   onLeaveRoom: (() => void) | null = null;
   onReady: (() => void) | null = null;
@@ -64,7 +64,7 @@ export class UI {
     document.getElementById('create-room-btn')?.addEventListener('click', () => {
       const rounds = parseInt((document.getElementById('config-rounds') as HTMLSelectElement).value);
       const money = parseInt((document.getElementById('config-money') as HTMLSelectElement).value);
-      const startingInventory = (document.getElementById('config-inventory') as HTMLSelectElement).value;
+      const startingInventory = (document.getElementById('config-inventory') as HTMLSelectElement).value as 'none' | 'missiles' | 'heavy' | 'everything';
       this.onCreateRoom?.({ rounds, startingMoney: money, startingInventory });
     });
 

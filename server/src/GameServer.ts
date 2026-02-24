@@ -223,6 +223,15 @@ export class GameServer {
         break;
       }
 
+      case 'SKIP_SCORE': {
+        const roomId = this.playerRooms.get(playerId);
+        if (!roomId) break;
+        const room = this.rooms.get(roomId);
+        if (!room) break;
+        room.handleScoreSkip(playerId);
+        break;
+      }
+
       case 'CHAT': {
         if (!player) break;
         const roomId = this.playerRooms.get(playerId);
