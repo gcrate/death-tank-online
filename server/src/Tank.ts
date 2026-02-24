@@ -22,6 +22,7 @@ export class Tank {
   hasCorbomite: boolean = false;
   isJumping: boolean = false;
   isGrounded: boolean = true;
+  isMovementBlocked: boolean = false;
 
   // How far below the tank terrain can drop before the tank goes airborne.
   // Small slopes stay grounded; sudden craters trigger freefall.
@@ -133,6 +134,7 @@ export class Tank {
   }
 
   move(direction: -1 | 0 | 1, terrain: Terrain, deltaTime: number): void {
+    this.isMovementBlocked = false;
     if (!this.alive || direction === 0) return;
 
     const slope = terrain.getSlopeAt(this.x);
@@ -144,7 +146,10 @@ export class Tank {
       const goingDownhill = (direction > 0 && slope < -0.1) || (direction < 0 && slope > 0.1);
       if (goingUphill) {
         // Block movement on slopes steeper than 70°
-        if (Math.abs(slope) > 70 * Math.PI / 180) return;
+        if (Math.abs(slope) > 70 * Math.PI / 180) {
+          this.isMovementBlocked = true;
+          return;
+        }
         speed *= PHYSICS.TANK_UPHILL_MODIFIER;
       } else if (goingDownhill) {
         speed *= PHYSICS.TANK_DOWNHILL_MODIFIER;
@@ -214,6 +219,7 @@ export class Tank {
       currentWeapon: this.getCurrentWeapon(),
       weaponChargePercent: this.weaponCharges.get(this.getCurrentWeapon()) || 0,
       weaponAmmo,
+      isMovementBlocked: this.isMovementBlocked,
     };
   }
 }

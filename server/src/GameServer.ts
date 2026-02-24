@@ -85,8 +85,8 @@ export class GameServer {
         const config: RoomConfig = {
           rounds: [5, 10, 15, 20, 30].includes(message.payload.config.rounds)
             ? message.payload.config.rounds : 10,
-          startingMoney: [100, 200, 500].includes(message.payload.config.startingMoney)
-            ? message.payload.config.startingMoney : 200,
+          startingMoney: [0, 100, 200, 500].includes(message.payload.config.startingMoney)
+            ? message.payload.config.startingMoney : 0,
           mapType: 'mountainous',
           startingInventory: validInventories.includes(message.payload.config.startingInventory)
             ? message.payload.config.startingInventory : 'none',

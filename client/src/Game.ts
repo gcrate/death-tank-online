@@ -41,6 +41,9 @@ export class Game {
 
   // Visual state
   private explosions: ActiveExplosion[] = [];
+  private wobbleUntil: number = 0;
+  private lastTankX: number | null = null;
+  private lastMoveDirection: -1 | 0 | 1 = 0;
   private blitzAnimStart: number = 0;
   private showBlitz: boolean = false;
   private groovyTime: number = 0;
@@ -226,6 +229,8 @@ export class Game {
       this.showRoundResult = false;
       this.showGroovy = false;
       this.gameState = null;
+      this.lastTankX = null;
+      this.wobbleUntil = 0;
 
       // Set player list from room state
       if (this.localRoom) {
@@ -273,6 +278,14 @@ export class Game {
           }
         }
       }
+
+      // Detect blocked movement: pressing a direction but x didn't change
+      if (tank && this.lastMoveDirection !== 0 && this.lastTankX !== null) {
+        if (Math.abs(tank.x - this.lastTankX) < 0.5) {
+          this.wobbleUntil = performance.now() + 400;
+        }
+      }
+      this.lastTankX = tank?.x ?? null;
 
       this.gameState = msg.payload;
     });
@@ -446,6 +459,7 @@ export class Game {
 
     if (this.phase === 'playing' && !this.chatOpen) {
       const inputState = this.input.update(deltaTime);
+      this.lastMoveDirection = inputState.moveDirection;
 
       // Send input at ~20 Hz
       this.inputSendRate += deltaTime;
@@ -474,12 +488,14 @@ export class Game {
         const gs = this.gameState;
 
         // Draw tanks
+        const wobbleOffset = now < this.wobbleUntil ? Math.sin(now / 40) * 3 : 0;
+
         this.players.forEach((player, i) => {
           const tank = gs.tanks[player.id];
           if (tank) {
             const isLocal = player.id === this.localId;
             const hasTc = this.localInventory.items.includes(ItemType.TARGETING_COMPUTER) && isLocal;
-            this.renderer.drawTank(tank, i, player.name, isLocal, hasTc, this.heightmap);
+            this.renderer.drawTank(tank, i, player.name, isLocal, hasTc, this.heightmap, isLocal ? wobbleOffset : 0);
           }
         });
 

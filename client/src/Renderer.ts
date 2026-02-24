@@ -218,9 +218,10 @@ export class Renderer {
     playerName: string,
     isLocal: boolean,
     hasTargetingComputer: boolean,
-    heightmap: number[]
+    heightmap: number[],
+    wobbleOffset: number = 0
   ): void {
-    const x = tank.x;
+    const x = tank.x + wobbleOffset;
     const y = CANVAS_HEIGHT - tank.y;
     const color = TANK_COLORS[playerIndex % TANK_COLORS.length];
 
