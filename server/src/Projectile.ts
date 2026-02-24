@@ -17,6 +17,7 @@ export class Projectile {
   hasLanded: boolean = false;
   age: number = 0;              // Seconds since launch
   maxAge: number = Infinity;    // Time limit before self-detonation
+  splitAge: number | null = null; // If set, split at this age regardless of apex
 
   constructor(
     id: string,
@@ -56,13 +57,19 @@ export class Projectile {
       return this.updateRollingMine(deltaTime, terrain);
     }
 
+    // Age-based split (e.g. Death's Head clusters after 0.7s)
+    if (this.splitAge !== null && this.age >= this.splitAge) {
+      this.splitAge = null;  // prevent re-trigger
+      return { hit: false, split: true };
+    }
+
     // Apply gravity
     this.vy -= PHYSICS.GRAVITY * deltaTime;
 
-    // Check for apex (for MIRV and Death's Head)
+    // Check for apex (MIRV only — Death's Head uses splitAge instead)
     if (this.vy <= 0 && !this.hasReachedApex) {
       this.hasReachedApex = true;
-      if (this.type === WeaponType.MIRV || this.type === WeaponType.DEATHS_HEAD) {
+      if (this.type === WeaponType.MIRV) {
         return { hit: false, split: true };
       }
     }
@@ -74,6 +81,11 @@ export class Projectile {
     // Check terrain collision — bitmap-based so overhangs work correctly
     if (terrain.isSolid(this.x, this.y)) {
       this.active = false;
+      // Death's Head hit before its split time: tiny blast + cluster
+      if (this.splitAge !== null) {
+        this.splitAge = null;
+        return { hit: true, split: true, x: this.x, y: this.y };
+      }
       return { hit: true, x: this.x, y: this.y };
     }
 
@@ -174,10 +186,13 @@ export function createSplitProjectiles(
   parent: Projectile,
   count: number,
   coneAngle: number,
-  idGenerator: () => string
+  idGenerator: () => string,
+  baseAngleDeg?: number  // Override cone direction; defaults to parent velocity direction
 ): Projectile[] {
   const projectiles: Projectile[] = [];
-  const baseAngle = Math.atan2(parent.vy, parent.vx) * (180 / Math.PI);
+  const baseAngle = baseAngleDeg !== undefined
+    ? baseAngleDeg
+    : Math.atan2(parent.vy, parent.vx) * (180 / Math.PI);
   const halfCone = coneAngle / 2;
   const angleStep = count > 1 ? coneAngle / (count - 1) : 0;
 

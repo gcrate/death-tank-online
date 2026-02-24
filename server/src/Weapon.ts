@@ -46,8 +46,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: 'MIRV',
     cost: 50,
     chargeTime: 4.5,
-    damage: 15,                 // Per bomblet
-    blastRadius: 25,
+    damage: 40,                 // Per bomblet
+    blastRadius: 40,
     ammoPerPurchase: 1,
     special: 'split_5_60deg',   // 5 bomblets, 60° cone
   },
@@ -56,8 +56,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: 'Nuke',
     cost: 50,
     chargeTime: 5.0,
-    damage: 80,
-    blastRadius: 180,
+    damage: 85,
+    blastRadius: 200,
     ammoPerPurchase: 1,
     special: 'screen_shake',
   },
@@ -66,8 +66,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: "Death's Head",
     cost: 250,
     chargeTime: 6.0,
-    damage: 25,                 // Per bomblet
-    blastRadius: 30,
+    damage: 105,                 // Per bomblet
+    blastRadius: 40,
     ammoPerPurchase: 1,
     special: 'split_30_120deg', // 30 bomblets, 120° cone
   },

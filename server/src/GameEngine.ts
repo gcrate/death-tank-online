@@ -139,17 +139,50 @@ export class GameEngine {
         const weapon = projectile.type;
         let count = 5;
         let cone = 60;
+        let baseAngleDeg: number | undefined;
 
         if (weapon === WeaponType.DEATHS_HEAD) {
           count = 30;
           cone = 120;
+          baseAngleDeg = 270;  // Cone always points straight down
+
+          // Early hit (terrain/tank before 0.7s): tiny blast at impact point
+          if (result.hit && result.x !== undefined && result.y !== undefined) {
+            const tinyExplosion: ExplosionEvent = {
+              x: result.x,
+              y: result.y,
+              radius: 15,
+              damage: 10,
+              ownerId: projectile.ownerId,
+              weaponType: projectile.type,
+            };
+            explosions.push(tinyExplosion);
+            const destruction = this.terrain.destroy(result.x, result.y, 15);
+            terrainDestructions.push(destruction);
+            for (const [tankId, tank] of this.tanks) {
+              if (!tank.alive) continue;
+              const dist = Math.sqrt((tank.x - result.x) ** 2 + (tank.y - result.y) ** 2);
+              if (dist < 15) {
+                const damage = Math.floor(10 * (1 - dist / 15));
+                if (damage > 0) {
+                  this.lastDamageDealer.set(tankId, projectile.ownerId);
+                  const dr = tank.takeDamage(damage, this.roundTime);
+                  if (dr.dead) {
+                    const killedBy = projectile.ownerId === tankId ? null : projectile.ownerId;
+                    events.push({ type: 'DEATH', playerId: tankId, killedBy });
+                  }
+                }
+              }
+            }
+          }
         }
 
         const bomblets = createSplitProjectiles(
           projectile,
           count,
           cone,
-          () => this.generateProjectileId()
+          () => this.generateProjectileId(),
+          baseAngleDeg
         );
 
         toAdd.push(...bomblets);
@@ -414,6 +447,11 @@ export class GameEngine {
     // Guided missiles have a 2-second flight limit
     if (weapon === WeaponType.MISSILES) {
       projectile.maxAge = 2.0;
+    }
+
+    // Death's Head clusters after 0.7 seconds
+    if (weapon === WeaponType.DEATHS_HEAD) {
+      projectile.splitAge = 1.2;
     }
 
     this.projectiles.set(projectile.id, projectile);
