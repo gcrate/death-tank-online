@@ -45,7 +45,7 @@ export interface RoomConfig {
 
 export interface InputState {
   moveDirection: -1 | 0 | 1;  // Left, None, Right
-  aimAngle: number;           // 0-180 degrees (0 = right, 180 = left)
+  aimAngle: number;           // -20 to 200 degrees (0 = right, 180 = left, ±20 below horizon)
   power: number;              // 0-100
   firing: boolean;
   jumping: boolean;

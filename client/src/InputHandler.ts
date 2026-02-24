@@ -62,19 +62,19 @@ export class InputHandler {
     // Aiming: Left/Right arrows or A/D
     const aimSpeed = 90 * deltaTime;  // Degrees per second
     if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) {
-      this.aimAngle = Math.min(180, this.aimAngle + aimSpeed);
+      this.aimAngle = Math.min(200, this.aimAngle + aimSpeed);
     }
     if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) {
-      this.aimAngle = Math.max(0, this.aimAngle - aimSpeed);
+      this.aimAngle = Math.max(-20, this.aimAngle - aimSpeed);
     }
     if (gamepad) {
       const rightStickY = gamepad.axes[3];
       const dpadUp = gamepad.buttons[12]?.pressed;
       const dpadDown = gamepad.buttons[13]?.pressed;
-      if (dpadUp) this.aimAngle = Math.min(180, this.aimAngle + aimSpeed);
-      if (dpadDown) this.aimAngle = Math.max(0, this.aimAngle - aimSpeed);
+      if (dpadUp) this.aimAngle = Math.min(200, this.aimAngle + aimSpeed);
+      if (dpadDown) this.aimAngle = Math.max(-20, this.aimAngle - aimSpeed);
       if (Math.abs(rightStickY) > 0.1) {
-        this.aimAngle = Math.max(0, Math.min(180, this.aimAngle - rightStickY * aimSpeed * 2));
+        this.aimAngle = Math.max(-20, Math.min(200, this.aimAngle - rightStickY * aimSpeed * 2));
       }
     }
 

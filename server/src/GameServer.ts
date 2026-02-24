@@ -177,7 +177,7 @@ export class GameServer {
         const input = message.payload;
         player.currentInput = {
           moveDirection: ([-1, 0, 1].includes(input.moveDirection) ? input.moveDirection : 0) as -1 | 0 | 1,
-          aimAngle: Math.max(0, Math.min(180, input.aimAngle)),
+          aimAngle: Math.max(-20, Math.min(200, input.aimAngle)),
           power: Math.max(10, Math.min(100, input.power)),
           firing: Boolean(input.firing),
           jumping: Boolean(input.jumping),
