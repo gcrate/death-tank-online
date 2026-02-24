@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Death Tank</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #app {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #ui-overlay.interactive {
+      pointer-events: auto;
+    }
+
+    /* Screens */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 20, 0.9);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 64px;
+      color: #ff0;
+      text-shadow: 0 0 20px #ff0, 0 0 40px #f80;
+      margin-bottom: 10px;
+      letter-spacing: 8px;
+    }
+
+    h2 {
+      font-size: 28px;
+      color: #0ff;
+      margin-bottom: 30px;
+      letter-spacing: 4px;
+    }
+
+    h3 {
+      font-size: 20px;
+      color: #ff0;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      background: transparent;
+      border: 2px solid #0ff;
+      color: #0ff;
+      font-family: inherit;
+      font-size: 18px;
+      padding: 10px 30px;
+      margin: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #0ff;
+      color: #000;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn.danger {
+      border-color: #f00;
+      color: #f00;
+    }
+
+    .btn.danger:hover {
+      background: #f00;
+      color: #fff;
+    }
+
+    .btn.primary {
+      border-color: #ff0;
+      color: #ff0;
+    }
+
+    .btn.primary:hover {
+      background: #ff0;
+      color: #000;
+    }
+
+    input[type="text"], select {
+      background: #111;
+      border: 2px solid #0ff;
+      color: #0ff;
+      font-family: inherit;
+      font-size: 16px;
+      padding: 8px 12px;
+      margin: 5px;
+      outline: none;
+      width: 200px;
+    }
+
+    select option {
+      background: #111;
+      color: #0ff;
+    }
+
+    label {
+      color: #aaa;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    /* Lobby */
+    #lobby-screen .panel {
+      background: rgba(0, 0, 50, 0.8);
+      border: 1px solid #0ff;
+      padding: 20px;
+      margin: 10px;
+      min-width: 300px;
+    }
+
+    #room-list {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .room-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      margin: 4px 0;
+      cursor: pointer;
+    }
+
+    .room-item:hover {
+      border-color: #0ff;
+      background: rgba(0, 255, 255, 0.05);
+    }
+
+    .room-item .room-info {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    /* Room lobby */
+    #room-screen .player-list {
+      list-style: none;
+      min-width: 280px;
+    }
+
+    #room-screen .player-list li {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #333;
+      font-size: 16px;
+    }
+
+    .player-color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .ready-badge {
+      margin-left: auto;
+      font-size: 12px;
+      color: #0f0;
+    }
+
+    .not-ready-badge {
+      margin-left: auto;
+      font-size: 12px;
+      color: #f00;
+    }
+
+    /* Shop screen */
+    #shop-screen {
+      align-items: stretch;
+    }
+
+    #shop-screen .shop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .shop-category h3 {
+      margin-bottom: 10px;
+    }
+
+    .shop-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      margin: 3px 0;
+      font-size: 14px;
+    }
+
+    .shop-item .item-cost {
+      color: #ff0;
+    }
+
+    .shop-item .buy-btn {
+      font-size: 12px;
+      padding: 4px 12px;
+      margin: 0;
+    }
+
+    .shop-item.cant-afford {
+      opacity: 0.5;
+    }
+
+    /* Timer bar */
+    #timer-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: #0ff;
+      transition: width 1s linear;
+    }
+
+    #shop-timer {
+      font-size: 24px;
+      color: #ff0;
+      margin-bottom: 10px;
+    }
+
+    #money-display {
+      font-size: 20px;
+      color: #0f0;
+      margin-bottom: 15px;
+    }
+
+    /* Game over */
+    #gameover-screen table {
+      border-collapse: collapse;
+      min-width: 400px;
+      margin: 20px 0;
+    }
+
+    #gameover-screen th, #gameover-screen td {
+      padding: 8px 16px;
+      border-bottom: 1px solid #333;
+      text-align: left;
+    }
+
+    #gameover-screen th {
+      color: #0ff;
+    }
+
+    #gameover-screen td:first-child {
+      font-weight: bold;
+    }
+
+    /* Chat */
+    #chat-box {
+      position: absolute;
+      bottom: 70px;
+      left: 10px;
+      width: 320px;
+      max-height: 150px;
+      overflow-y: auto;
+      pointer-events: none;
+    }
+
+    .chat-msg {
+      font-size: 13px;
+      padding: 2px 0;
+      text-shadow: 1px 1px 2px #000;
+      opacity: 1;
+      transition: opacity 5s;
+    }
+
+    .chat-msg.fading {
+      opacity: 0;
+    }
+
+    #chat-input-row {
+      position: absolute;
+      bottom: 100px;
+      left: 10px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #chat-input-row label {
+      color: #0ff;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    #chat-input {
+      background: rgba(0,0,40,0.95);
+      border: 2px solid #0ff;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 5px 10px;
+      width: 280px;
+      outline: none;
+    }
+
+    #kill-feed {
+      position: absolute;
+      top: 70px;
+      right: 10px;
+      text-align: right;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .kill-msg {
+      padding: 2px 0;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* Connecting overlay */
+    #connecting-screen {
+      background: rgba(0,0,0,0.95);
+    }
+
+    #connecting-screen p {
+      font-size: 20px;
+      color: #0ff;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #111;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #0ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game-canvas"></canvas>
+    <div id="ui-overlay" class="interactive">
+
+      <!-- Connecting -->
+      <div class="screen active" id="connecting-screen">
+        <h1>DEATH TANK</h1>
+        <p>CONNECTING...</p>
+      </div>
+
+      <!-- Name entry / Lobby -->
+      <div class="screen" id="name-screen">
+        <h1>DEATH TANK</h1>
+        <h2>ENTER YOUR NAME</h2>
+        <input type="text" id="player-name-input" placeholder="Tank Commander" maxlength="20" />
+        <button class="btn primary" id="join-lobby-btn">ENTER LOBBY</button>
+      </div>
+
+      <!-- Lobby -->
+      <div class="screen" id="lobby-screen">
+        <h1>DEATH TANK</h1>
+        <div style="display:flex; gap:20px;">
+          <div class="panel">
+            <h3>ROOMS</h3>
+            <div id="room-list">
+              <div style="color:#666; text-align:center; padding:20px;">No rooms available</div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>CREATE ROOM</h3>
+            <div class="form-row">
+              <label>Rounds:</label>
+              <select id="config-rounds">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Starting $:</label>
+              <select id="config-money">
+                <option value="100">$100</option>
+                <option value="200" selected>$200</option>
+                <option value="500">$500</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Loadout:</label>
+              <select id="config-inventory">
+                <option value="none" selected>None</option>
+                <option value="missiles">Missiles (x3)</option>
+                <option value="heavy">Heavy (Nuke+Air+Mines)</option>
+                <option value="everything">Full Arsenal</option>
+              </select>
+            </div>
+            <button class="btn primary" id="create-room-btn">CREATE ROOM</button>
+          </div>
+        </div>
+        <div id="lobby-player-count" style="margin-top:15px; color:#666; font-size:14px;"></div>
+      </div>
+
+      <!-- Room lobby -->
+      <div class="screen" id="room-screen">
+        <h2 id="room-title">ROOM</h2>
+        <ul class="player-list" id="room-player-list"></ul>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+          <button class="btn primary" id="ready-btn">READY</button>
+          <button class="btn danger" id="leave-room-btn">LEAVE</button>
+        </div>
+        <div id="room-status" style="margin-top:15px; color:#aaa; font-size:14px;"></div>
+      </div>
+
+      <!-- Shop -->
+      <div class="screen" id="shop-screen">
+        <h2>WEAPON SHOP</h2>
+        <div id="shop-timer">30s</div>
+        <div id="money-display">$200</div>
+        <div class="shop-grid">
+          <div class="shop-category">
+            <h3>WEAPONS</h3>
+            <div id="weapons-list"></div>
+          </div>
+          <div class="shop-category">
+            <h3>ITEMS</h3>
+            <div id="items-list"></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="btn primary" id="shop-ready-btn">READY (skip)</button>
+        </div>
+        <div id="timer-bar" style="width:100%;"></div>
+      </div>
+
+      <!-- Game over -->
+      <div class="screen" id="gameover-screen">
+        <h1>GAME OVER</h1>
+        <h2 id="winner-text"></h2>
+        <table>
+          <thead>
+            <tr><th>Rank</th><th>Player</th><th>Score</th><th>Kills</th></tr>
+          </thead>
+          <tbody id="rankings-body"></tbody>
+        </table>
+        <button class="btn primary" id="play-again-btn">BACK TO LOBBY</button>
+      </div>
+
+      <!-- In-game HUD overlays (always on top of canvas) -->
+      <div id="kill-feed"></div>
+      <div id="chat-box"></div>
+      <div id="chat-input-row">
+        <label>CHAT:</label>
+        <input type="text" id="chat-input" placeholder="Type and press Enter..." maxlength="200" />
+      </div>
+
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
