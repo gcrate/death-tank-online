@@ -256,7 +256,7 @@ export function createAirStrikeProjectiles(
 ): Projectile[] {
   const projectiles: Projectile[] = [];
   const count = 5;
-  const spread = 200;  // Total horizontal spread
+  const spread = 220;  // Total horizontal spread
 
   for (let i = 0; i < count; i++) {
     const x = targetX - spread / 2 + (spread / (count - 1)) * i;

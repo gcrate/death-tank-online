@@ -86,8 +86,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: 'Air Strike',
     cost: 200,
     chargeTime: 4.8,
-    damage: 35,                 // Per bomb
-    blastRadius: 40,
+    damage: 45,                 // Per bomb
+    blastRadius: 50,
     ammoPerPurchase: 1,
     special: 'drops_5_from_sky',
   },
