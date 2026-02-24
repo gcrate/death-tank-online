@@ -1,4 +1,4 @@
-# Death Tank Clone
+# Death Tank Online - Fan Tribute
 
 Browser-based multiplayer artillery game inspired by Death Tank (1996).
 
@@ -15,7 +15,7 @@ Install Node.js v20+ from https://nodejs.org/
 cd server && npm install
 
 # Client
-cd ../client && npm install
+cd client && npm install
 ```
 
 ### Run
@@ -36,14 +36,15 @@ npm run dev
 
 Then open http://localhost:3000 in multiple browser tabs.
 
+On Windows you can also run `restart.bat` to kill existing node processes and relaunch both.
+
 ## Controls
 
 | Action | Keyboard | Gamepad |
 |--------|----------|---------|
-| Move | A/D or ←/→ | Left Stick |
-| Aim | W/S or ↑/↓ | Right Stick |
-| Power Up | E | RT |
-| Power Down | Q | LT |
+| Move | Q / E | Left Stick / D-pad ←/→ |
+| Aim | A / D or ←/→ | D-pad ↑/↓ or Right Stick |
+| Power Up/Down | W / S or ↑/↓ | RT / LT |
 | Fire | Space | A |
 | Jump Jets | Shift (hold) | B |
 | Next Weapon | Tab | RB |
@@ -55,36 +56,57 @@ Then open http://localhost:3000 in multiple browser tabs.
 | Weapon | Cost | Ammo | Notes |
 |--------|------|------|-------|
 | Standard Missile | Free | ∞ | 2s charge |
-| Machine Gun | $25 | 100 | Rapid fire |
-| Missiles | $50 | 3 | 5s charge |
-| MIRV | $50 | 1 | Splits at apex into 5 |
-| Nuke | $50 | 1 | Large blast + screen shake |
-| Rolling Mines | $150 | 3 | Rolls downhill, proximity trigger |
-| Air Strike | $200 | 1 | 5 bombs from above |
-| Death's Head | $250 | 1 | Splits into 30 bomblets |
+| Machine Gun | $25 | 100 | Rapid fire, 0.1s charge |
+| Missiles | $50 | 3 | Steerable with aim controls; 2s flight limit |
+| MIRV | $50 | 1 | Splits at apex into 5 bomblets |
+| Nuke | $50 | 1 | Massive blast + screen shake |
+| Rolling Mines | $150 | 5 | Rolls downhill, proximity trigger |
+| Air Strike | $200 | 1 | 5 bombs dropped from above |
+| Death's Head | $250 | 1 | Clusters into 30 downward bomblets after 0.7s |
 
 ## Items
 
 | Item | Cost | Effect |
 |------|------|--------|
 | Corbomite | $25 | Death explosion (5 bomblets) |
-| Jump Jets | $50 | Enables flight (2s fuel, regens) |
+| Jump Jets | $50 | Enables flight; fuel carries over between rounds |
 | Targeting Computer | $50 | Shows trajectory arc |
 | Shield Upgrade | $100 | +50 max shield HP |
-| Hover Coil | $125 | Slow fall speed |
+| Hover Coil | $125 | Reduces fall speed - Need to to behave as original |
 
-## Architecture
+## Room Configuration
 
-- **Server**: Node.js + TypeScript + ws (WebSockets), 30 tick/s authoritative server
-- **Client**: HTML5 Canvas + TypeScript + Vite, no frameworks
-- **Shared**: Protocol types in `shared/protocol.ts`
+When creating a room, the host can set:
+
+| Option | Choices | Default |
+|--------|---------|---------|
+| Rounds | 5, 10, 15, 20, 30 | 10 |
+| Starting Money | $0, $100, $200, $500 | $0 |
+| Starting Loadout | None, Missiles (x3), Heavy (Nuke+Air+Mines), Full Arsenal | None |
+
+The starting loadout is given to all players at the beginning of round 1 only. Money earned in rounds carries over to the shop between rounds.
+
+## Economy
+
+- **Kill reward**: money for each kill
+- **Leader kill bonus**: extra money for killing the round leader
+- **Survival bonus**: staying alive to the end
+- **Participation bonus**: awarded to everyone each round
+- Weapon inventory (ammo counts) carries over between rounds; one-use items (Corbomite, Targeting Computer) are consumed
 
 ## Game Flow
 
-1. Join lobby → Create or join room (2-7 players)
-2. All players ready → Round starts
-3. Real-time combat on destructible terrain
-4. Round ends when 1 player remains (or time limit)
-5. Shop phase (30s) → buy weapons/items with earned money
-6. Repeat for configured number of rounds
-7. Player with most round wins is champion
+1. Join lobby → create or join a room (2–7 players)
+2. All players ready → round starts on destructible mountainous terrain
+3. Real-time combat; terrain is permanently destroyed by explosions
+4. Round ends when 1 player remains (or the time limit hits)
+5. World leveling begins at 60s; continuous damage to all tanks from 90s
+6. Shop phase (30s) → spend earned money on weapons and items
+7. Repeat for the configured number of rounds
+8. Player with the most round wins is champion
+
+## Architecture
+
+- **Server**: Node.js + TypeScript + `ws` (WebSockets), authoritative 30 tick/s game loop
+- **Client**: HTML5 Canvas + TypeScript + Vite, no frameworks
+- **Shared**: `shared/protocol.ts` — all WebSocket message types, imported by both packages
