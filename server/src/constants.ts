@@ -40,7 +40,7 @@ export const ECONOMY = {
 
 export const TERRAIN = {
   RESOLUTION: 1280,                 // One height value per pixel width
-  MIN_HEIGHT: Math.round(GAME.CANVAS_HEIGHT * 0.1),  // Mountains peak at 90% of play area height from bottom
-  MAX_HEIGHT: 500,
+  MIN_HEIGHT: Math.round(GAME.CANVAS_HEIGHT * 0.1),  // Mountains peak at 95% of play area height from bottom
+  MAX_HEIGHT: 550,
   FLOOR_HEIGHT: Math.round(GAME.CANVAS_HEIGHT * 0.1),  // = MIN_HEIGHT; terrain cannot be destroyed below the valley floor
 };
