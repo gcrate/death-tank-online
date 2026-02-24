@@ -14,7 +14,7 @@ export const ITEMS: Record<ItemType, ItemDefinition> = {
     type: ItemType.JUMP_JETS,
     name: 'Jump Jets',
     cost: 50,
-    effect: 'Enables flight with 2 seconds of fuel. Stackable — each extra purchase doubles total fly time.',
+    effect: 'Adds 3 seconds of jet fuel. Max 9 seconds (3 purchases).',
     duration: 'permanent',
   },
   [ItemType.SHIELD]: {

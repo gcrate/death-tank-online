@@ -3,7 +3,7 @@ import {
   ServerMessage, WeaponType, ItemType, InventoryState,
   ShopPayload, InputState,
 } from '../../shared/protocol';
-import { GAME, TERRAIN, COMBAT } from './constants';
+import { GAME, TERRAIN, COMBAT, PHYSICS } from './constants';
 import { WEAPONS } from './Weapon';
 import { ITEMS } from './Items';
 import { Terrain } from './Terrain';
@@ -112,8 +112,7 @@ export class Room {
       player.weapons.clear();
       player.weapons.set(WeaponType.STANDARD, -1);
       player.items.clear();
-      player.jumpJetCount = 0;
-      player.jetFuel = 0;
+      player.jetFuelSeconds = 0;
       // Apply chosen starting loadout
       this.applyStartingInventory(player);
     }
@@ -138,6 +137,7 @@ export class Room {
         player.addWeapon(WeaponType.DEATHS_HEAD, 1);
         player.addWeapon(WeaponType.ROLLING_MINES, 3);
         player.addWeapon(WeaponType.AIR_STRIKE, 1);
+        player.addItem(ItemType.JUMP_JETS);
         break;
       // 'none': no extra weapons
     }
@@ -164,10 +164,9 @@ export class Room {
       // Apply purchased items
       const player = this.players.get(playerId);
       if (player) {
-        if (player.jumpJetCount > 0) {
+        if (player.jetFuelSeconds > 0) {
           tank.hasJumpJets = true;
-          tank.maxJetFuel = player.jumpJetCount;
-          tank.jetFuel = player.jetFuel;
+          tank.jetFuelSeconds = player.jetFuelSeconds;
         }
         if (player.hasItem(ItemType.SHIELD)) {
           tank.maxShield = COMBAT.SHIELD_MAX;
@@ -410,10 +409,8 @@ export class Room {
         }
       }
 
-      // Carry forward jet fuel
-      if (player.jumpJetCount > 0) {
-        player.jetFuel = tank.jetFuel;
-      }
+      // Carry forward remaining jet fuel
+      player.jetFuelSeconds = tank.jetFuelSeconds;
     }
 
     // Strip per-round items so players must re-purchase each shop phase
@@ -489,6 +486,7 @@ export class Room {
 
     if (itemDef) {
       if (player.money < itemDef.cost) return false;
+      if (itemDef.type === ItemType.JUMP_JETS && player.jetFuelSeconds >= PHYSICS.JUMP_JET_FUEL_MAX) return false;
       if (itemDef.duration === 'permanent' && itemDef.type !== ItemType.JUMP_JETS && player.hasItem(itemDef.type)) return false;
       if (itemDef.duration === 'per_round' && player.hasItem(itemDef.type)) return false;
       player.money -= itemDef.cost;

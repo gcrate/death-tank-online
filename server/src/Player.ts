@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { WeaponType, ItemType, InputState, InventoryState, ServerMessage } from '../../shared/protocol';
+import { PHYSICS } from './constants';
 
 export class Player {
   id: string;
@@ -12,8 +13,7 @@ export class Player {
   // Persistent inventory across rounds
   weapons: Map<WeaponType, number> = new Map();  // weapon -> ammo
   items: Set<ItemType> = new Set();
-  jumpJetCount: number = 0;
-  jetFuel: number = 0;        // 0–1 normalized; persists between rounds
+  jetFuelSeconds: number = 0;  // Actual seconds of fuel remaining; persists between rounds
 
   // Total kills across all rounds (for game over screen)
   totalKills: number = 0;
@@ -37,7 +37,7 @@ export class Player {
   }
 
   hasItem(itemType: ItemType): boolean {
-    if (itemType === ItemType.JUMP_JETS) return this.jumpJetCount > 0;
+    if (itemType === ItemType.JUMP_JETS) return this.jetFuelSeconds > 0;
     return this.items.has(itemType);
   }
 
@@ -54,9 +54,10 @@ export class Player {
 
   addItem(type: ItemType): void {
     if (type === ItemType.JUMP_JETS) {
-      this.jumpJetCount++;
-      // Add one jet's worth of fuel, re-normalized to the new total capacity
-      this.jetFuel = (this.jetFuel * (this.jumpJetCount - 1) + 1) / this.jumpJetCount;
+      this.jetFuelSeconds = Math.min(
+        PHYSICS.JUMP_JET_FUEL_MAX,
+        this.jetFuelSeconds + PHYSICS.JUMP_JET_FUEL_PER_PURCHASE
+      );
     } else {
       this.items.add(type);
     }
@@ -69,7 +70,9 @@ export class Player {
     }
 
     const items: ItemType[] = Array.from(this.items);
-    for (let i = 0; i < this.jumpJetCount; i++) items.push(ItemType.JUMP_JETS);
+    // Push JUMP_JETS once per purchased pack so the client can count them
+    const packs = Math.min(3, Math.ceil(this.jetFuelSeconds / PHYSICS.JUMP_JET_FUEL_PER_PURCHASE));
+    for (let i = 0; i < packs; i++) items.push(ItemType.JUMP_JETS);
 
     return {
       weapons,

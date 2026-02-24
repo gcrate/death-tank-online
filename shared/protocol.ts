@@ -129,6 +129,8 @@ export interface TankState {
   shield: number;
   alive: boolean;
   jetFuel: number;
+  bodyAngle: number;                         // Degrees, 0 = upright, positive = CCW (top-left)
+  isJumping: boolean;                        // True when jet thrust is actively firing
   currentWeapon: WeaponType;
   weaponChargePercent: number;  // 0-100, can fire at 100
   weaponAmmo: { [weapon: string]: number };  // Live ammo counts from server

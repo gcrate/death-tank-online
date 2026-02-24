@@ -18,7 +18,8 @@ export const PHYSICS = {
   TANK_UPHILL_MODIFIER: 0.6,
   TANK_DOWNHILL_MODIFIER: 1.4,
   JUMP_JET_THRUST: 300,             // Pixels per second
-  JUMP_JET_FUEL_DURATION: 2,        // Seconds
+  JUMP_JET_FUEL_PER_PURCHASE: 3,    // Seconds of fuel added per shop purchase
+  JUMP_JET_FUEL_MAX: 9,             // Maximum seconds storable (3 purchases)
 };
 
 export const COMBAT = {

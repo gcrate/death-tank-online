@@ -3,7 +3,11 @@
     "allow": [
       "Bash(winget:*)",
       "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\" && cd /c/Users/graCr/Workspace/dt/server && npm install 2>&1)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(true:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

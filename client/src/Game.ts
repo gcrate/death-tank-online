@@ -145,8 +145,10 @@ export class Game {
         }
         this.updateWeaponCount();
       } else {
-        // It's an item
-        if (!this.localInventory.items.includes(itemType as ItemType)) {
+        // It's an item — jump jets are stackable, all others are one-time
+        if (itemType === ItemType.JUMP_JETS) {
+          this.localInventory.items.push(itemType as ItemType);
+        } else if (!this.localInventory.items.includes(itemType as ItemType)) {
           this.localInventory.items.push(itemType as ItemType);
         }
       }

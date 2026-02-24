@@ -298,32 +298,48 @@ export class UI {
 
     listEl.innerHTML = '';
 
+    const jetPacks = ownedItems.filter(i => i === ItemType.JUMP_JETS).length;
+
     for (const item of ITEM_INFO) {
       const div = document.createElement('div');
-      const hasIt = ownedItems.includes(item.type);
-      const canAfford = money >= item.cost;
 
-      div.className = `shop-item${!canAfford || hasIt ? ' cant-afford' : ''}`;
+      let hasIt: boolean;
+      let btnLabel: string;
+      let desc: string;
+
+      if (item.type === ItemType.JUMP_JETS) {
+        hasIt = jetPacks >= 3;
+        const fuelSecs = jetPacks * 3;
+        desc = jetPacks === 0 ? '3 sec of jet fuel (max 9 sec)' : `${fuelSecs}/9 sec fuel`;
+        btnLabel = hasIt ? 'MAX' : 'BUY';
+      } else {
+        hasIt = ownedItems.includes(item.type);
+        desc = item.desc;
+        btnLabel = hasIt ? 'OWNED' : 'BUY';
+      }
+
+      const canAfford = money >= item.cost;
+      const disabled = !canAfford || hasIt;
+
+      div.className = `shop-item${disabled ? ' cant-afford' : ''}`;
       div.innerHTML = `
         <span>
           ${item.name}
-          <div style="font-size:11px;color:#888;">${item.desc}</div>
+          <div style="font-size:11px;color:#888;">${desc}</div>
         </span>
         <span style="display:flex;align-items:center;gap:8px;">
           <span class="item-cost">$${item.cost}</span>
-          <button class="btn buy-btn" ${!canAfford || hasIt ? 'disabled' : ''}>
-            ${hasIt ? 'OWNED' : 'BUY'}
-          </button>
+          <button class="btn buy-btn" ${disabled ? 'disabled' : ''}>${btnLabel}</button>
         </span>
       `;
 
-      if (hasIt) {
+      if (item.type === ItemType.JUMP_JETS ? jetPacks > 0 : hasIt) {
         div.style.borderColor = '#0f0';
       }
 
       const btn = div.querySelector('.buy-btn');
       btn?.addEventListener('click', () => {
-        if (!hasIt) this.onPurchase?.(item.type);
+        if (!disabled) this.onPurchase?.(item.type);
       });
 
       listEl.appendChild(div);

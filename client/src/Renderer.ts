@@ -314,32 +314,72 @@ export class Renderer {
       this.ctx.restore();
     }
 
-    // Tank tracks
-    this.ctx.fillStyle = '#333';
-    this.ctx.fillRect(x - 17, y - 4, 34, 6);
+    // Tank body — rotated by bodyAngle around hull center (x, y-8)
+    const bodyAngle = tank.bodyAngle ?? 0;
+    const bodyRad = (bodyAngle * Math.PI) / 180;
+    {
+      this.ctx.save();
+      this.ctx.translate(x, y - 8);
+      this.ctx.rotate(-bodyRad);  // positive bodyAngle = CCW on screen = negative ctx.rotate
 
-    // Tank body
-    this.ctx.fillStyle = color;
-    this.ctx.fillRect(x - 14, y - 12, 28, 12);
+      // Tracks (relative to pivot at y-8: original y-4 → offset +4)
+      this.ctx.fillStyle = '#333';
+      this.ctx.fillRect(-17, 4, 34, 6);
 
-    // Tank turret dome
-    this.ctx.beginPath();
-    this.ctx.ellipse(x, y - 12, 10, 7, 0, Math.PI, 0);
-    this.ctx.fill();
+      // Hull (relative to pivot: original y-12 → offset -4)
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(-14, -4, 28, 12);
 
-    // Barrel
-    const barrelLength = 22;
-    const radians = (tank.aimAngle * Math.PI) / 180;
-    const barrelEndX = x + Math.cos(radians) * barrelLength;
-    const barrelEndY = y - 12 - Math.sin(radians) * barrelLength;
+      // Turret dome (relative to pivot: original y-12 → offset -4)
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, -4, 10, 7, 0, Math.PI, 0);
+      this.ctx.fill();
 
-    this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = 4;
-    this.ctx.lineCap = 'round';
-    this.ctx.beginPath();
-    this.ctx.moveTo(x, y - 12);
-    this.ctx.lineTo(barrelEndX, barrelEndY);
-    this.ctx.stroke();
+      // Jet flame — shoots downward from hull bottom when thrusting
+      if (tank.isJumping && tank.jetFuel > 0) {
+        const t = Date.now() / 120;
+        const tongues = [
+          { ox: -6, baseH: 18, freq: 2.3, phase: 0.0 },
+          { ox:  0, baseH: 26, freq: 1.7, phase: 1.1 },
+          { ox:  6, baseH: 16, freq: 3.1, phase: 2.2 },
+        ];
+        for (const tongue of tongues) {
+          const fh = tongue.baseH + Math.sin(t * tongue.freq + tongue.phase) * 6;
+          const fy = 8;  // start just below tracks bottom in rotated frame
+          const grad = this.ctx.createLinearGradient(tongue.ox, fy, tongue.ox, fy + fh);
+          grad.addColorStop(0.0, 'rgba(255, 255, 200, 1.0)');
+          grad.addColorStop(0.2, 'rgba(255, 200,  50, 0.95)');
+          grad.addColorStop(0.6, 'rgba(255,  70,   0, 0.7)');
+          grad.addColorStop(1.0, 'rgba(180,   0,   0, 0)');
+          this.ctx.fillStyle = grad;
+          this.ctx.beginPath();
+          this.ctx.ellipse(tongue.ox, fy + fh / 2, 5, fh / 2, 0, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+      }
+
+      this.ctx.restore();
+    }
+
+    // Barrel — starts at rotated turret center, aims in world direction
+    // Turret center is 4px above the pivot in canvas space; after rotating by -bodyRad:
+    //   offset (0,-4) → x' = -4·sin(bodyRad),  y' = -4·cos(bodyRad)
+    {
+      const turrX = x + (-4 * Math.sin(bodyRad));
+      const turrY = (y - 8) + (-4 * Math.cos(bodyRad));
+      const barrelLength = 22;
+      const aimRad = (tank.aimAngle * Math.PI) / 180;
+      const barrelEndX = turrX + Math.cos(aimRad) * barrelLength;
+      const barrelEndY = turrY - Math.sin(aimRad) * barrelLength;
+
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 4;
+      this.ctx.lineCap = 'round';
+      this.ctx.beginPath();
+      this.ctx.moveTo(turrX, turrY);
+      this.ctx.lineTo(barrelEndX, barrelEndY);
+      this.ctx.stroke();
+    }
 
     // Shield bubble (if any)
     if (tank.shield > 0) {

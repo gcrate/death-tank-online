@@ -8,14 +8,15 @@ export class Tank {
   x: number;
   y: number;
   vy: number = 0;             // Vertical velocity for physics
+  vx: number = 0;             // Horizontal velocity (for airborne momentum from jets)
   aimAngle: number = 90;      // Degrees, 90 = straight up
+  bodyAngle: number = 0;      // Degrees, 0 = upright, positive = CCW (top-left), range -90..90
   power: number = 50;
   health: number = COMBAT.TANK_HEALTH;
   shield: number = 0;
   maxShield: number = 0;
   alive: boolean = true;
-  jetFuel: number = 0;        // 0–1, normalized across all purchased jets
-  maxJetFuel: number = 1;     // Scales drain rate: each extra jet doubles total fuel
+  jetFuelSeconds: number = 0;  // Actual seconds of fuel remaining
   hasJumpJets: boolean = false;
   hasTargetingComputer: boolean = false;
   hasHoverCoil: boolean = false;
@@ -27,6 +28,8 @@ export class Tank {
   // How far below the tank terrain can drop before the tank goes airborne.
   // Small slopes stay grounded; sudden craters trigger freefall.
   static readonly AIRBORNE_THRESHOLD = 16;
+  // Degrees per second the tank body rotates when airborne with jump jets
+  static readonly JET_ROTATION_SPEED = 90;
 
   inventory: Map<WeaponType, number> = new Map();  // Weapon -> ammo count
   currentWeaponIndex: number = 0;
@@ -137,10 +140,18 @@ export class Tank {
     this.isMovementBlocked = false;
     if (!this.alive || direction === 0) return;
 
+    // When airborne with jump jets: Q/E rotates the tank body instead of moving
+    if (!this.isGrounded && this.hasJumpJets) {
+      this.bodyAngle = Math.max(-90, Math.min(90,
+        this.bodyAngle - direction * Tank.JET_ROTATION_SPEED * deltaTime
+      ));
+      return;
+    }
+
     const slope = terrain.getSlopeAt(this.x);
     let speed = PHYSICS.TANK_SPEED;
 
-    // Grounded tanks have slope-dependent speed; airborne tanks can't steer
+    // Grounded tanks have slope-dependent speed
     if (this.isGrounded) {
       const goingUphill   = (direction > 0 && slope > 0.1)  || (direction < 0 && slope < -0.1);
       const goingDownhill = (direction > 0 && slope < -0.1) || (direction < 0 && slope > 0.1);
@@ -167,10 +178,13 @@ export class Tank {
     const terrainHeight = terrain.getHeightAt(this.x);
 
     // --- Jump jets override grounded behaviour ---
-    if (this.hasJumpJets && jumping && this.jetFuel > 0) {
+    if (this.hasJumpJets && jumping && this.jetFuelSeconds > 0) {
       this.isGrounded = false;
-      this.vy = PHYSICS.JUMP_JET_THRUST;
-      this.jetFuel = Math.max(0, this.jetFuel - deltaTime / (PHYSICS.JUMP_JET_FUEL_DURATION * this.maxJetFuel));
+      // Thrust in the direction the top of the tank is pointing
+      const bodyRad = (this.bodyAngle * Math.PI) / 180;
+      this.vx = -Math.sin(bodyRad) * PHYSICS.JUMP_JET_THRUST;
+      this.vy = Math.cos(bodyRad) * PHYSICS.JUMP_JET_THRUST;
+      this.jetFuelSeconds = Math.max(0, this.jetFuelSeconds - deltaTime);
     } else if (this.isGrounded) {
       // --- Grounded: snap to terrain surface ---
       // If terrain has been blasted away or we drove over a crater edge,
@@ -185,18 +199,22 @@ export class Tank {
       }
     }
 
-    // --- Airborne: gravity ---
+    // --- Airborne: gravity + horizontal momentum ---
     if (!this.isGrounded) {
       let gravity = PHYSICS.GRAVITY;
       if (this.hasHoverCoil) gravity *= 0.4;
       this.vy -= gravity * deltaTime;
       this.y  += this.vy * deltaTime;
+      this.x  += this.vx * deltaTime;
+      this.x   = Math.max(20, Math.min(GAME.CANVAS_WIDTH - 20, this.x));
 
       // Landed?
       if (this.y <= terrainHeight) {
-        this.y        = terrainHeight;
-        this.vy       = 0;
+        this.y          = terrainHeight;
+        this.vy         = 0;
+        this.vx         = 0;
         this.isGrounded = true;
+        this.bodyAngle  = 0;  // Snap upright on landing
       }
     }
 
@@ -215,7 +233,9 @@ export class Tank {
       health: this.health,
       shield: this.shield,
       alive: this.alive,
-      jetFuel: this.jetFuel,
+      jetFuel: this.jetFuelSeconds / PHYSICS.JUMP_JET_FUEL_MAX,
+      bodyAngle: this.bodyAngle,
+      isJumping: this.hasJumpJets && this.isJumping && this.jetFuelSeconds > 0,
       currentWeapon: this.getCurrentWeapon(),
       weaponChargePercent: this.weaponCharges.get(this.getCurrentWeapon()) || 0,
       weaponAmmo,
