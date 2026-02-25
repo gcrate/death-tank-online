@@ -20,6 +20,8 @@ export const PHYSICS = {
   JUMP_JET_THRUST: 300,             // Pixels per second
   JUMP_JET_FUEL_PER_PURCHASE: 3,    // Seconds of fuel added per shop purchase
   JUMP_JET_FUEL_MAX: 9,             // Maximum seconds storable (3 purchases)
+  HOVER_COIL_HEIGHT: 100,           // Pixels above terrain to hover
+  HOVER_COIL_RISE_SPEED: 400,       // Pixels per second to rise/drop toward hover height
 };
 
 export const COMBAT = {

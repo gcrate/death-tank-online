@@ -420,7 +420,9 @@ export class Game {
 
       // Strip depleted weapons and per-round items (mirrors server endRound cleanup)
       this.localInventory.weapons = this.localInventory.weapons.filter(w => w.ammo === -1 || w.ammo > 0);
-      this.localInventory.items = this.localInventory.items.filter(i => i !== ItemType.TARGETING_COMPUTER);
+      this.localInventory.items = this.localInventory.items.filter(
+        i => i !== ItemType.TARGETING_COMPUTER && i !== ItemType.HOVER_COIL
+      );
 
       // Sync jet fuel packs from authoritative server count (corrects fuel burned in-round)
       const myPacks = msg.payload.jetFuelPacks?.[this.localId] ?? 0;

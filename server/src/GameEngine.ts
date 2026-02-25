@@ -124,7 +124,10 @@ export class GameEngine {
       // Direct tank hit check
       if (!result.hit && !result.split && !result.outOfBounds) {
         for (const [tankId, tank] of this.tanks) {
-          if (!tank.alive || tankId === projectile.ownerId) continue;
+          if (!tank.alive) continue;
+          // Skip owner for the first 0.5s so the shot clears the barrel;
+          // after that, own projectiles can hit the firing tank
+          if (tankId === projectile.ownerId && projectile.age < 0.5) continue;
           const dx = tank.x - projectile.x;
           const dy = tank.y - projectile.y;
           if (Math.sqrt(dx * dx + dy * dy) < 16) {

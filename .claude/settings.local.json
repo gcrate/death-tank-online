@@ -9,7 +9,9 @@
       "Bash(true:*)",
       "Bash(taskkill:*)",
       "Bash(head:*)",
-      "Bash(grep error TS:*)"
+      "Bash(grep error TS:*)",
+      "Bash(cd /c/Users/graCr/Workspace/dt/server && npx tsc --noEmit 2>&1)",
+      "Bash(cd /c/Users/graCr/Workspace/dt/client && npx tsc --noEmit 2>&1)"
     ]
   }
 }

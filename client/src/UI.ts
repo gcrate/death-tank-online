@@ -19,7 +19,7 @@ const ITEM_INFO: { type: ItemType; name: string; cost: number; desc: string }[] 
   { type: ItemType.JUMP_JETS, name: 'Jump Jets', cost: 50, desc: 'Enables flight' },
   { type: ItemType.TARGETING_COMPUTER, name: 'Target Computer', cost: 50, desc: 'Trajectory arc' },
   { type: ItemType.SHIELD, name: 'Shield Upgrade', cost: 100, desc: '+50 max shield' },
-  { type: ItemType.HOVER_COIL, name: 'Hover Coil', cost: 125, desc: 'Slow fall' },
+  { type: ItemType.HOVER_COIL, name: 'Hover Coil', cost: 125, desc: 'Fly 100px above terrain (1 round)' },
 ];
 
 type Screen = 'connecting' | 'name' | 'lobby' | 'room' | 'shop' | 'gameover';

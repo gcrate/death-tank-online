@@ -42,7 +42,7 @@ export const ITEMS: Record<ItemType, ItemDefinition> = {
     type: ItemType.HOVER_COIL,
     name: 'Hover Coil',
     cost: 125,
-    effect: 'Slow fall speed, improved air control',
-    duration: 'permanent',
+    effect: 'Fly 100px above terrain on jump. Overrides jump jets for this round only.',
+    duration: 'per_round',
   },
 };

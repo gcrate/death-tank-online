@@ -136,6 +136,7 @@ export interface TankState {
   weaponChargePercent: number;  // 0-100, can fire at 100
   weaponAmmo: { [weapon: string]: number };  // Live ammo counts from server
   isMovementBlocked?: boolean;               // True this tick if steep slope prevented movement
+  isHovering?: boolean;                      // True when hover coil is active and lifting
 }
 
 export interface ProjectileState {

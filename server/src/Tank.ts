@@ -140,6 +140,13 @@ export class Tank {
     this.isMovementBlocked = false;
     if (!this.alive || direction === 0) return;
 
+    // When airborne with hover coil: move freely at 130% speed, no slope restriction
+    if (!this.isGrounded && this.hasHoverCoil) {
+      this.x += direction * PHYSICS.TANK_SPEED * 1.3 * deltaTime;
+      this.x = Math.max(20, Math.min(GAME.CANVAS_WIDTH - 20, this.x));
+      return;
+    }
+
     // When airborne with jump jets: Q/E rotates the tank body instead of moving
     if (!this.isGrounded && this.hasJumpJets) {
       this.bodyAngle = Math.max(-90, Math.min(90,
@@ -176,9 +183,19 @@ export class Tank {
 
     this.isJumping = jumping;
     const terrainHeight = terrain.getHeightAt(this.x);
+    const activelyHovering = this.hasHoverCoil && jumping;
 
+    // --- Hover coil: rise to target height above terrain, no fuel cost ---
+    if (activelyHovering) {
+      this.isGrounded = false;
+      const targetY = terrainHeight + PHYSICS.HOVER_COIL_HEIGHT;
+      const diff = targetY - this.y;
+      const step = Math.sign(diff) * Math.min(Math.abs(diff), PHYSICS.HOVER_COIL_RISE_SPEED * deltaTime);
+      this.y += step;
+      this.vy = 0;
+      this.vx = 0;
     // --- Jump jets override grounded behaviour ---
-    if (this.hasJumpJets && jumping && this.jetFuelSeconds > 0) {
+    } else if (this.hasJumpJets && jumping && this.jetFuelSeconds > 0) {
       this.isGrounded = false;
       // Thrust in the direction the top of the tank is pointing
       const bodyRad = (this.bodyAngle * Math.PI) / 180;
@@ -200,10 +217,9 @@ export class Tank {
     }
 
     // --- Airborne: gravity + horizontal momentum ---
-    if (!this.isGrounded) {
-      let gravity = PHYSICS.GRAVITY;
-      if (this.hasHoverCoil) gravity *= 0.4;
-      this.vy -= gravity * deltaTime;
+    // Skip when hover coil is actively levitating (position already set above)
+    if (!this.isGrounded && !activelyHovering) {
+      this.vy -= PHYSICS.GRAVITY * deltaTime;
       this.y  += this.vy * deltaTime;
       this.x  += this.vx * deltaTime;
       this.x   = Math.max(20, Math.min(GAME.CANVAS_WIDTH - 20, this.x));
@@ -235,7 +251,8 @@ export class Tank {
       alive: this.alive,
       jetFuel: this.jetFuelSeconds / PHYSICS.JUMP_JET_FUEL_MAX,
       bodyAngle: this.bodyAngle,
-      isJumping: this.hasJumpJets && this.isJumping && this.jetFuelSeconds > 0,
+      isJumping: this.hasJumpJets && !this.hasHoverCoil && this.isJumping && this.jetFuelSeconds > 0,
+      isHovering: this.hasHoverCoil && this.isJumping && !this.isGrounded,
       currentWeapon: this.getCurrentWeapon(),
       weaponChargePercent: this.weaponCharges.get(this.getCurrentWeapon()) || 0,
       weaponAmmo,

@@ -225,6 +225,22 @@ export class Renderer {
     const y = CANVAS_HEIGHT - tank.y;
     const color = TANK_COLORS[playerIndex % TANK_COLORS.length];
 
+    // Hover coil blue glow — drawn before tank so tank overlaps it
+    if (tank.isHovering) {
+      const glowCenterY = y + 6;
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() / 180);
+      const grad = this.ctx.createRadialGradient(x, glowCenterY, 0, x, glowCenterY, 38);
+      grad.addColorStop(0,   `rgba(100, 200, 255, ${0.85 * pulse})`);
+      grad.addColorStop(0.4, `rgba(0,   140, 255, ${0.5  * pulse})`);
+      grad.addColorStop(1,   'rgba(0, 80, 255, 0)');
+      this.ctx.save();
+      this.ctx.fillStyle = grad;
+      this.ctx.beginPath();
+      this.ctx.ellipse(x, glowCenterY, 38, 11, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
+    }
+
     if (!tank.alive) {
       // Draw dark wreck
       this.ctx.save();

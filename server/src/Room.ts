@@ -416,6 +416,7 @@ export class Room {
     // Strip per-round items so players must re-purchase each shop phase
     for (const player of this.players.values()) {
       player.items.delete(ItemType.TARGETING_COMPUTER);
+      player.items.delete(ItemType.HOVER_COIL);
     }
 
     // Show score screen for 10 seconds, then open shop
