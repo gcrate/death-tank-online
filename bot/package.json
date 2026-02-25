@@ -1,0 +1,25 @@
+{
+  "name": "death-tank-bot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "register": "tsx scripts/register-commands.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.758.0",
+    "@aws-sdk/client-ec2": "^3.758.0",
+    "@aws-sdk/client-ecs": "^3.758.0",
+    "@aws-sdk/client-lambda": "^3.758.0",
+    "@aws-sdk/client-ssm": "^3.758.0",
+    "@aws-sdk/util-dynamodb": "^3.758.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.0"
+  }
+}

@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/.git
+infra/
+*.bat
+*.sh
+death-tank-spec.md
+README.md
+CLAUDE.md

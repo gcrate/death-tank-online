@@ -92,6 +92,21 @@ Running the task costs roughly **$0.03/hour** (0.5 vCPU + 1 GB RAM on Fargate in
 
 ---
 
+## Discord Bot
+
+A slash command bot lets you start and stop the server from Discord without touching the AWS console or a terminal.
+
+| Command | Action |
+|---|---|
+| `/start` | Spins up the ECS task, posts the IP when ready |
+| `/stop` | Stops the server immediately |
+| `/status` | Shows IP, uptime, and who started it |
+| `/help` | Lists commands |
+
+See [`bot/README.md`](bot/README.md) for setup instructions.
+
+---
+
 ## Controls
 
 | Action | Key |
@@ -184,3 +199,4 @@ The **score screen** is shown for 10 seconds after each round, displaying each p
 - **Client**: HTML5 Canvas + TypeScript + Vite, no frameworks
 - **Shared**: `shared/protocol.ts` — all WebSocket message types, imported by both packages
 - **Infra**: Terraform — VPC, ECR, ECS Fargate cluster/service
+- **Bot**: TypeScript Lambda functions + API Gateway + DynamoDB — Discord slash command interface for starting/stopping the server
