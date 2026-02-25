@@ -27,23 +27,7 @@ npm install
 npm run build        # outputs dist/{interactions,start-server,stop-idle}/index.js
 ```
 
-### 3. Store secrets in SSM Parameter Store
-
-```bash
-aws ssm put-parameter \
-  --name /death-tank-bot/discord-bot-token \
-  --value "YOUR_BOT_TOKEN" \
-  --type SecureString
-
-aws ssm put-parameter \
-  --name /death-tank-bot/discord-public-key \
-  --value "YOUR_PUBLIC_KEY" \
-  --type SecureString
-```
-
-The public key is in **General Information** on the Discord Developer Portal.
-
-### 4. Deploy infrastructure
+### 3. Deploy infrastructure
 
 ```bash
 cd bot/infra
@@ -51,7 +35,23 @@ terraform init
 terraform apply -var="discord_application_id=YOUR_APP_ID"
 ```
 
-Note the `api_gateway_url` output.
+Note the `api_gateway_url` output. Terraform creates placeholder SSM parameters for the Discord secrets — overwrite them with real values next.
+
+### 4. Set secrets in SSM Parameter Store
+
+```bash
+aws ssm put-parameter \
+  --name /death-tank-bot/discord-bot-token \
+  --value "YOUR_BOT_TOKEN" \
+  --type SecureString --overwrite
+
+aws ssm put-parameter \
+  --name /death-tank-bot/discord-public-key \
+  --value "YOUR_PUBLIC_KEY" \
+  --type SecureString --overwrite
+```
+
+The public key is in **General Information** on the Discord Developer Portal.
 
 ### 5. Register slash commands
 
