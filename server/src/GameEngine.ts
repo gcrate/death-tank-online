@@ -341,7 +341,7 @@ export class GameEngine {
         this.terrain.flatten(flattenRate);
 
         // Random explosions during phase 2 (15-25 seconds in)
-        if (levelingPhase > 30 && levelingPhase < 40 && Math.random() < 0.1) {
+        if (levelingPhase > 50 && levelingPhase < 60 && Math.random() < 0.1) {
           const randomX = Math.random() * GAME.CANVAS_WIDTH;
           const randomY = this.terrain.getHeightAt(randomX) + Math.random() * 100;
           const explosion: ExplosionEvent = {

@@ -5,7 +5,7 @@ export const GAME = {
   MAX_PLAYERS: 7,
   MIN_PLAYERS: 2,
   DEFAULT_ROUNDS: 10,
-  ROUND_TIME_LIMIT: 140,            // Seconds
+  ROUND_TIME_LIMIT: 200,            // Seconds
   WORLD_LEVELING_START: 90,         // Seconds into round
   SHOP_DURATION: 30,                // Seconds
   BLITZ_CHANCE: 0.10,               // 10% chance per round
