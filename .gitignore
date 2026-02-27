@@ -30,3 +30,5 @@ bot/dist/*.zip
 bot/infra/.terraform/
 bot/infra/terraform.tfstate
 bot/infra/terraform.tfstate.backup
+
+.claude
