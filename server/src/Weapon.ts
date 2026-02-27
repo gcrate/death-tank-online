@@ -46,8 +46,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: 'MIRV',
     cost: 50,
     chargeTime: 4.5,
-    damage: 40,                 // Per bomblet
-    blastRadius: 40,
+    damage: 45,                 // Per bomblet
+    blastRadius: 45,
     ammoPerPurchase: 1,
     special: 'split_5_60deg',   // 5 bomblets, 60° cone
   },
@@ -66,8 +66,8 @@ export const WEAPONS: Record<WeaponType, WeaponDefinition> = {
     name: "Death's Head",
     cost: 250,
     chargeTime: 6.0,
-    damage: 105,                 // Per bomblet
-    blastRadius: 40,
+    damage: 120,                 // Per bomblet
+    blastRadius: 45,
     ammoPerPurchase: 1,
     special: 'split_30_120deg', // 30 bomblets, 120° cone
   },

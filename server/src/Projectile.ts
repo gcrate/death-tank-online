@@ -63,8 +63,10 @@ export class Projectile {
       return { hit: false, split: true };
     }
 
-    // Apply gravity
-    this.vy -= PHYSICS.GRAVITY * deltaTime;
+    // Apply gravity (missiles are self-propelled, not affected by gravity)
+    if (this.type !== WeaponType.MISSILES) {
+      this.vy -= PHYSICS.GRAVITY * deltaTime;
+    }
 
     // Check for apex (MIRV only — Death's Head uses splitAge instead)
     if (this.vy <= 0 && !this.hasReachedApex) {
@@ -229,7 +231,7 @@ export function createCorbomiteProjectiles(
   const halfCone = coneAngle / 2;
   const angleStep = coneAngle / (count - 1);
   const baseAngle = 90;  // Straight up
-  const power = 30;  // Low power
+  const power = 36;  // Low power (20% boost)
 
   for (let i = 0; i < count; i++) {
     const angle = baseAngle - halfCone + angleStep * i;

@@ -447,9 +447,9 @@ export class GameEngine {
       tank.id
     );
 
-    // Guided missiles have a 2-second flight limit
+    // Guided missiles have a 5-second flight limit
     if (weapon === WeaponType.MISSILES) {
-      projectile.maxAge = 2.0;
+      projectile.maxAge = 5.0;
     }
 
     // Death's Head clusters after 0.7 seconds

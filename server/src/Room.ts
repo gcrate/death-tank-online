@@ -233,6 +233,11 @@ export class Room {
   calculateStartPositions(): Map<string, { x: number; y: number }> {
     const positions = new Map<string, { x: number; y: number }>();
     const playerIds = Array.from(this.players.keys());
+    // Shuffle spawn order so player 1 isn't always leftmost
+    for (let i = playerIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [playerIds[i], playerIds[j]] = [playerIds[j], playerIds[i]];
+    }
     const spacing = GAME.CANVAS_WIDTH / (playerIds.length + 1);
 
     playerIds.forEach((id, i) => {
