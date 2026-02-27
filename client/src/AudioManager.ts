@@ -3,6 +3,7 @@ export class AudioManager {
   private musicVolume: number = 0.4;
   private sfxVolume: number = 0.6;
   private enabled: boolean = true;
+  private loops: Map<string, HTMLAudioElement> = new Map();
 
   async loadSounds(): Promise<void> {
     // Sound files are optional - gracefully handle missing files
@@ -81,9 +82,42 @@ export class AudioManager {
     }
   }
 
+  startLoop(soundName: string, volume: number = 1): void {
+    if (!this.enabled) return;
+    if (this.loops.has(soundName)) return; // already playing
+    const sound = this.sounds.get(soundName);
+    if (sound) {
+      try {
+        const instance = sound.cloneNode() as HTMLAudioElement;
+        instance.volume = Math.min(1, volume * this.sfxVolume);
+        instance.loop = true;
+        instance.play().catch(() => {});
+        this.loops.set(soundName, instance);
+      } catch {
+        // Ignore
+      }
+    }
+  }
+
+  stopLoop(soundName: string): void {
+    const instance = this.loops.get(soundName);
+    if (instance) {
+      try {
+        instance.pause();
+        instance.currentTime = 0;
+      } catch {
+        // Ignore
+      }
+      this.loops.delete(soundName);
+    }
+  }
+
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    if (!enabled) this.stopMusic();
+    if (!enabled) {
+      this.stopMusic();
+      for (const name of [...this.loops.keys()]) this.stopLoop(name);
+    }
   }
 
   setSfxVolume(vol: number): void {

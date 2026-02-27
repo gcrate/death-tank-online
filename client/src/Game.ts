@@ -42,6 +42,7 @@ export class Game {
   // Visual state
   private explosions: ActiveExplosion[] = [];
   private wobbleUntil: number = 0;
+  private jetsPlaying: boolean = false;
   private lastTankX: number | null = null;
   private lastMoveDirection: -1 | 0 | 1 = 0;
   private blitzAnimStart: number = 0;
@@ -512,6 +513,17 @@ export class Game {
         this.inputSendRate = 0;
         this.network.send({ type: 'INPUT', payload: inputState });
       }
+    }
+
+    // Jet thruster sound — loop while local tank is actively thrusting
+    const localTank = this.gameState?.tanks[this.localId];
+    const jetsActive = !!(localTank && localTank.isJumping && localTank.jetFuel > 0);
+    if (jetsActive && !this.jetsPlaying) {
+      this.audio.startLoop('jump_jets', 0.6);
+      this.jetsPlaying = true;
+    } else if (!jetsActive && this.jetsPlaying) {
+      this.audio.stopLoop('jump_jets');
+      this.jetsPlaying = false;
     }
   }
 
