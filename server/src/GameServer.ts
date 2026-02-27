@@ -178,6 +178,7 @@ export class GameServer {
         player.currentInput = {
           moveDirection: ([-1, 0, 1].includes(input.moveDirection) ? input.moveDirection : 0) as -1 | 0 | 1,
           aimAngle: Math.max(-20, Math.min(200, input.aimAngle)),
+          aimDirection: ([-1, 0, 1].includes(input.aimDirection) ? input.aimDirection : 0) as -1 | 0 | 1,
           power: Math.max(10, Math.min(100, input.power)),
           firing: Boolean(input.firing),
           jumping: Boolean(input.jumping),

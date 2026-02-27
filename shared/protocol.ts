@@ -47,6 +47,7 @@ export interface RoomConfig {
 export interface InputState {
   moveDirection: -1 | 0 | 1;  // Left, None, Right
   aimAngle: number;           // -20 to 200 degrees (0 = right, 180 = left, ±20 below horizon)
+  aimDirection: -1 | 0 | 1;  // Raw A/D intent (-1 = right/D, 0 = none, 1 = left/A) — used for missile steering at angle limits
   power: number;              // 0-100
   firing: boolean;
   jumping: boolean;

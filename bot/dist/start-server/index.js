@@ -36,7 +36,7 @@ var CLUSTER = process.env.ECS_CLUSTER_NAME;
 var SERVICE = process.env.ECS_SERVICE_NAME;
 var TABLE = process.env.DYNAMODB_TABLE;
 var SERVER_ID = process.env.SERVER_ID;
-var GAME_PORT = process.env.GAME_PORT ?? "3000";
+var GAME_PORT = process.env.GAME_PORT ?? "80";
 var cachedBotToken;
 async function getBotToken() {
   if (cachedBotToken) return cachedBotToken;

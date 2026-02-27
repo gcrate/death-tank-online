@@ -2281,7 +2281,7 @@ var CLUSTER = process.env.ECS_CLUSTER_NAME;
 var SERVICE = process.env.ECS_SERVICE_NAME;
 var APPLICATION_ID = process.env.DISCORD_APPLICATION_ID;
 var START_SERVER_LAMBDA = process.env.START_SERVER_LAMBDA_NAME;
-var GAME_PORT = process.env.GAME_PORT ?? "3000";
+var GAME_PORT = process.env.GAME_PORT ?? "80";
 var cachedPublicKey;
 async function getPublicKey() {
   if (cachedPublicKey) return cachedPublicKey;

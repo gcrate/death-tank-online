@@ -32,7 +32,7 @@ const CLUSTER = process.env.ECS_CLUSTER_NAME!;
 const SERVICE = process.env.ECS_SERVICE_NAME!;
 const TABLE = process.env.DYNAMODB_TABLE!;
 const SERVER_ID = process.env.SERVER_ID!;
-const GAME_PORT = process.env.GAME_PORT ?? "3000";
+const GAME_PORT = process.env.GAME_PORT ?? "80";
 
 let cachedBotToken: string | undefined;
 

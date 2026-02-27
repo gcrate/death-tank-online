@@ -35,7 +35,7 @@ const CLUSTER = process.env.ECS_CLUSTER_NAME!;
 const SERVICE = process.env.ECS_SERVICE_NAME!;
 const APPLICATION_ID = process.env.DISCORD_APPLICATION_ID!;
 const START_SERVER_LAMBDA = process.env.START_SERVER_LAMBDA_NAME!;
-const GAME_PORT = process.env.GAME_PORT ?? "3000";
+const GAME_PORT = process.env.GAME_PORT ?? "80";
 
 // Cached across warm invocations to avoid repeated SSM calls
 let cachedPublicKey: Uint8Array | undefined;

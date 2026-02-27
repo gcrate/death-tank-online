@@ -22,3 +22,11 @@ Thumbs.db
 .idea/
 *.suo
 *.user
+
+# Bot build artifacts
+bot/dist/*.zip
+
+# Terraform
+bot/infra/.terraform/
+bot/infra/terraform.tfstate
+bot/infra/terraform.tfstate.backup

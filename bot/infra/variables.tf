@@ -18,7 +18,7 @@ variable "discord_application_id" {
 variable "game_port" {
   description = "Port players connect to via browser (nginx serving the client)"
   type        = number
-  default     = 3000
+  default     = 80
 }
 
 variable "idle_timeout_minutes" {

@@ -53,12 +53,6 @@ export class GameEngine {
     this.roundTime += deltaTime;
     const events: GameEvent[] = [];
 
-    // Capture aim angles before updating tanks so missile steering can read the delta
-    const oldAimAngles = new Map<string, number>();
-    for (const [id, tank] of this.tanks) {
-      oldAimAngles.set(id, tank.aimAngle);
-    }
-
     // Update tanks
     for (const [playerId, tank] of this.tanks) {
       if (!tank.alive) continue;
@@ -101,21 +95,18 @@ export class GameEngine {
     const toAdd: Projectile[] = [];
 
     for (const [id, projectile] of this.projectiles) {
-      // Steer guided missiles using the owner's A/D aim-angle change
+      // Steer guided missiles using the owner's A/D intent (works even when aim angle is at its limit)
       if (projectile.type === WeaponType.MISSILES) {
-        const ownerTank = this.tanks.get(projectile.ownerId);
-        const oldAim = oldAimAngles.get(projectile.ownerId);
-        if (ownerTank && oldAim !== undefined) {
-          // aimAngle increases when pressing A (toward left=180°), decreases for D (toward right=0°)
-          // A positive delta means the player aimed left → turn missile left (increase velocity angle)
-          const aimDelta = ownerTank.aimAngle - oldAim;
-          if (aimDelta !== 0) {
-            const speed = Math.sqrt(projectile.vx ** 2 + projectile.vy ** 2);
-            const currentAngle = Math.atan2(projectile.vy, projectile.vx);
-            const newAngle = currentAngle + aimDelta * (Math.PI / 180);
-            projectile.vx = Math.cos(newAngle) * speed;
-            projectile.vy = Math.sin(newAngle) * speed;
-          }
+        const ownerInput = inputs.get(projectile.ownerId);
+        if (ownerInput && ownerInput.aimDirection !== 0) {
+          // aimDirection: 1 = A pressed (left), -1 = D pressed (right)
+          // Turn rate matches 90 deg/s aim speed * 2 multiplier, converted to radians per tick
+          const turnRate = 90 * 2 * (Math.PI / 180) * deltaTime;
+          const speed = Math.sqrt(projectile.vx ** 2 + projectile.vy ** 2);
+          const currentAngle = Math.atan2(projectile.vy, projectile.vx);
+          const newAngle = currentAngle + ownerInput.aimDirection * turnRate;
+          projectile.vx = Math.cos(newAngle) * speed;
+          projectile.vy = Math.sin(newAngle) * speed;
         }
       }
 
@@ -443,7 +434,7 @@ export class GameEngine {
       tank.x,
       tank.y + 10,  // Spawn slightly above tank
       tank.aimAngle,
-      tank.power,
+      weapon === WeaponType.MISSILES ? 35 : tank.power,
       tank.id
     );
 
