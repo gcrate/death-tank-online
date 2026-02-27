@@ -885,6 +885,16 @@ export class Renderer {
         ctx.fillRect(ix - 2, iy + 12, 28, 4);
       });
 
+      // Groovy bonus indicator
+      if (playerEarnings?.groovyBonus > 0) {
+        const groovyX = killStartX + playerKills.length * 40 + 16;
+        const hue = (Date.now() / 8) % 360;
+        ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('groovy bonus +50%', groovyX, midY + 7);
+      }
+
       // Round score earned (excluding participation bonus)
       ctx.textAlign = 'right';
       ctx.font = 'bold 20px monospace';

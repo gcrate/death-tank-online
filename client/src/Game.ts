@@ -52,6 +52,7 @@ export class Game {
   private roundResultWinner: string | null = null;
   private roundResultName: string = '';
   private showRoundResult: boolean = false;
+  private firedProjectileIds: Set<string> = new Set();
 
   // Score screen
   private scoreScreen: {
@@ -252,6 +253,7 @@ export class Game {
       this.gameState = null;
       this.lastTankX = null;
       this.wobbleUntil = 0;
+      this.firedProjectileIds.clear();
 
       // Set player list from room state
       if (this.localRoom) {
@@ -307,6 +309,14 @@ export class Game {
         }
       }
       this.lastTankX = tank?.x ?? null;
+
+      // Detect new projectiles and play firing sound
+      for (const proj of msg.payload.projectiles) {
+        if (!this.firedProjectileIds.has(proj.id)) {
+          this.firedProjectileIds.add(proj.id);
+          this.audio.play('fire_standard');
+        }
+      }
 
       this.gameState = msg.payload;
     });

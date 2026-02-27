@@ -27,9 +27,9 @@ export function calculateRoundEarnings(
 
   const subtotal = killReward + leaderKillReward + survivalBonus + participationBonus;
 
-  // Groovy bonus: +50% if killed all other players
+  // Groovy bonus: +50% if killed all other players (requires more than 2 players)
   let groovyBonus = 0;
-  if (allKilledByPlayer && kills.length === totalPlayers - 1) {
+  if (allKilledByPlayer && kills.length === totalPlayers - 1 && totalPlayers > 2) {
     groovyBonus = Math.floor(subtotal * (ECONOMY.GROOVY_MULTIPLIER - 1));
   }
 
