@@ -70,8 +70,16 @@
       font-size: 64px;
       color: #ff0;
       text-shadow: 0 0 20px #ff0, 0 0 40px #f80;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
       letter-spacing: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #f80;
+      letter-spacing: 6px;
+      margin-bottom: 20px;
+      opacity: 0.8;
     }
 
     h2 {
@@ -410,12 +418,14 @@
       <!-- Connecting -->
       <div class="screen active" id="connecting-screen">
         <h1>DEATH TANK</h1>
+        <p class="subtitle">TRIBUTE</p>
         <p>CONNECTING...</p>
       </div>
 
       <!-- Name entry / Lobby -->
       <div class="screen" id="name-screen">
         <h1>DEATH TANK</h1>
+        <p class="subtitle">TRIBUTE</p>
         <h2>ENTER YOUR NAME</h2>
         <input type="text" id="player-name-input" placeholder="Tank Commander" maxlength="20" />
         <button class="btn primary" id="join-lobby-btn">ENTER LOBBY</button>
@@ -424,6 +434,7 @@
       <!-- Lobby -->
       <div class="screen" id="lobby-screen">
         <h1>DEATH TANK</h1>
+        <p class="subtitle">TRIBUTE</p>
         <div style="display:flex; gap:20px;">
           <div class="panel">
             <h3>ROOMS</h3>

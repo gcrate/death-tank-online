@@ -137,6 +137,7 @@ export class Game {
 
     this.ui.onPurchase = (itemType) => {
       this.network.send({ type: 'PURCHASE', payload: { itemType } });
+      this.audio.play('purchase');
 
       // Optimistically update local inventory so the shop reflects the purchase immediately
       const weaponAmmo: Partial<Record<WeaponType, number>> = {
@@ -267,8 +268,9 @@ export class Game {
         this.localInventory = { weapons: inv.weapons, items: inv.items };
       }
 
-      // Update weapon count for input handler
+      // Update weapon count for input handler and reset to STD
       this.updateWeaponCount();
+      this.input.selectedWeapon = 0;
 
       this.ui.hideAllScreens();
       this.phase = 'playing';
@@ -299,6 +301,14 @@ export class Game {
         for (const w of this.localInventory.weapons) {
           if (w.ammo !== -1) {
             w.ammo = tank.weaponAmmo[w.type] ?? 0;
+          }
+        }
+        // If the selected special weapon is now out of ammo, fall back to STD (slot 0)
+        const sel = this.input.selectedWeapon;
+        if (sel > 0) {
+          const selWeapon = this.localInventory.weapons[sel];
+          if (selWeapon && selWeapon.ammo === 0) {
+            this.input.selectedWeapon = 0;
           }
         }
       }

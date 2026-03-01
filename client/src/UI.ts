@@ -221,8 +221,14 @@ export class UI {
     // Reset ready button if state changes
     const readyBtn = document.getElementById('ready-btn') as HTMLButtonElement;
     const localPlayer = state.players.find(p => p.id === localId);
+    const isHost = state.hostId === localId;
     if (readyBtn && localPlayer) {
-      if (localPlayer.ready) {
+      if (isHost) {
+        readyBtn.textContent = 'START GAME';
+        const enoughPlayers = state.players.length >= 2;
+        readyBtn.disabled = !enoughPlayers;
+        readyBtn.style.opacity = enoughPlayers ? '1' : '0.5';
+      } else if (localPlayer.ready) {
         readyBtn.textContent = 'READY!';
         readyBtn.disabled = true;
         readyBtn.style.opacity = '0.5';
