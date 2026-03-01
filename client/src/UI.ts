@@ -152,8 +152,14 @@ export class UI {
       const div = document.createElement('div');
       div.className = 'room-item';
 
-      const statusColor = room.inProgress ? '#f80' : '#0f0';
-      const statusText = room.inProgress ? 'IN PROGRESS' : 'WAITING';
+      const isFull = room.playerCount >= room.maxPlayers;
+      const canJoin = !room.inProgress && !isFull;
+      const statusColor = room.inProgress ? '#f80' : isFull ? '#f44' : '#0f0';
+      const statusText  = room.inProgress ? 'IN PROGRESS' : isFull ? 'FULL' : 'WAITING';
+
+      const joinHtml = canJoin
+        ? `<button class="btn primary" style="font-size:12px; padding:6px 14px;">JOIN</button>`
+        : `<span style="color:${statusColor}; font-size:12px;">${statusText}</span>`;
 
       div.innerHTML = `
         <div>
@@ -161,12 +167,13 @@ export class UI {
           <div class="room-info">${room.playerCount}/${room.maxPlayers} players · ${room.config.rounds} rounds · $${room.config.startingMoney}${room.config.startingInventory && room.config.startingInventory !== 'none' ? ' · ' + room.config.startingInventory : ''}</div>
         </div>
         <div style="text-align:right;">
-          <span style="color:${statusColor}; font-size:12px;">${statusText}</span>
+          ${joinHtml}
         </div>
       `;
 
-      if (!room.inProgress) {
-        div.addEventListener('click', () => {
+      if (canJoin) {
+        const btn = div.querySelector('button');
+        btn?.addEventListener('click', () => {
           this.onJoinRoom?.(room.roomId);
         });
       } else {
