@@ -1,10 +1,11 @@
+import * as http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ClientMessage, ServerMessage, LobbyState, RoomSummary, RoomConfig,
   WeaponType, ItemType,
 } from '../../shared/protocol';
-import { GAME, PHYSICS } from './constants';
+import { GAME, PHYSICS, SERVER } from './constants';
 import { Room } from './Room';
 import { Player } from './Player';
 
@@ -15,12 +16,50 @@ export class GameServer {
   private playerRooms: Map<string, string> = new Map(); // playerId -> roomId
 
   constructor(port: number) {
-    this.wss = new WebSocketServer({ port });
+    const httpServer = http.createServer((req, res) => this.handleHttpRequest(req, res));
+    this.wss = new WebSocketServer({ server: httpServer });
     this.wss.on('connection', (ws) => this.handleConnection(ws));
-    console.log(`Death Tank server running on ws://localhost:${port}`);
+    httpServer.listen(port, () => {
+      console.log(`Death Tank server running on port ${port} (ws + http)`);
+    });
+  }
+
+  private handleHttpRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
+    if (req.method === 'GET' && req.url === '/status') {
+      const activeRooms = Array.from(this.rooms.values())
+        .filter(room => room.state !== 'ended')
+        .map(room => ({
+          roomId: room.id,
+          playerCount: room.players.size,
+          maxPlayers: GAME.MAX_PLAYERS,
+          state: room.state,
+        }));
+
+      const body = JSON.stringify({
+        connectedPlayers: this.players.size,
+        maxConnections: SERVER.MAX_CONNECTIONS,
+        activeRooms,
+        maxRooms: SERVER.MAX_ROOMS,
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      });
+      res.end(body);
+      return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
   }
 
   private handleConnection(ws: WebSocket): void {
+    if (this.players.size >= SERVER.MAX_CONNECTIONS) {
+      ws.close(1008, 'Server full');
+      return;
+    }
+
     const playerId = uuidv4();
     console.log(`Player connected: ${playerId}`);
 
@@ -78,6 +117,12 @@ export class GameServer {
         }
         if (this.playerRooms.has(playerId)) {
           player.send({ type: 'ERROR', payload: { message: 'Already in a room' } });
+          break;
+        }
+
+        const activeRoomCount = Array.from(this.rooms.values()).filter(r => r.state !== 'ended').size;
+        if (activeRoomCount >= SERVER.MAX_ROOMS) {
+          player.send({ type: 'ERROR', payload: { message: 'Server room limit reached' } });
           break;
         }
 

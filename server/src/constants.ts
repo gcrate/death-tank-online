@@ -41,6 +41,11 @@ export const ECONOMY = {
   STARTING_MONEY: 200,
 };
 
+export const SERVER = {
+  MAX_CONNECTIONS: 25,   // Max simultaneous connected players
+  MAX_ROOMS: 6,          // Max concurrent game rooms
+};
+
 export const TERRAIN = {
   RESOLUTION: 1280,                 // One height value per pixel width
   MIN_HEIGHT: Math.round(GAME.CANVAS_HEIGHT * 0.1),  // Mountains peak at 95% of play area height from bottom
