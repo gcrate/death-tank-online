@@ -5,6 +5,7 @@ import {
 import { NetworkClient } from './NetworkClient';
 import { Renderer } from './Renderer';
 import { InputHandler } from './InputHandler';
+import { TouchController } from './TouchController';
 import { ParticleSystem } from './ParticleSystem';
 import { AudioManager } from './AudioManager';
 import { UI } from './UI';
@@ -16,6 +17,7 @@ export class Game {
   private network: NetworkClient;
   private renderer: Renderer;
   private input: InputHandler;
+  private touch: TouchController;
   private particles: ParticleSystem;
   private audio: AudioManager;
   private ui: UI;
@@ -83,6 +85,7 @@ export class Game {
     this.particles = new ParticleSystem();
     this.renderer = new Renderer(canvas, this.particles);
     this.input = new InputHandler();
+    this.touch = new TouchController(canvas, this.input);
     this.audio = new AudioManager();
     this.ui = new UI();
 
@@ -177,6 +180,22 @@ export class Game {
       this.phase = 'lobby';
       this.network.send({ type: 'LEAVE_ROOM' });
     };
+
+    // Touch controls toggle button in lobby
+    const touchBtn = document.getElementById('touch-toggle-btn') as HTMLButtonElement | null;
+    if (touchBtn) {
+      const syncBtn = () => {
+        const on = this.touch.isEnabled();
+        touchBtn.textContent = `TOUCH: ${on ? 'ON' : 'OFF'}`;
+        touchBtn.style.borderColor = on ? '#0f0' : '';
+        touchBtn.style.color       = on ? '#0f0' : '';
+      };
+      syncBtn();
+      touchBtn.addEventListener('click', () => {
+        this.touch.setEnabled(!this.touch.isEnabled());
+        syncBtn();
+      });
+    }
   }
 
   private setupChatHandlers(): void {
@@ -514,6 +533,7 @@ export class Game {
     this.explosions = this.explosions.filter(e => (nowSec - e.startTime / 1000) < e.duration);
 
     if (this.phase === 'playing' && !this.chatOpen) {
+      this.touch.updateInputState();
       const inputState = this.input.update(deltaTime);
       this.lastMoveDirection = inputState.moveDirection;
 
@@ -619,6 +639,11 @@ export class Game {
           this.localId,
           this.scoreScreen.mySkipped
         );
+      }
+
+      // Touch controls overlay (only during active play)
+      if (this.phase === 'playing') {
+        this.touch.draw(this.renderer.ctx);
       }
 
       this.renderer.endFrame();

@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <!-- iOS PWA fullscreen when launched from home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <title>Death Tank</title>
   <style>
     * {
@@ -19,13 +23,43 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
     }
 
     #app {
       position: relative;
-      width: 1280px;
-      height: 720px;
+      /* Scale to fill screen width while keeping 16:9; never overflow height */
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+    }
+
+    /* Landscape enforcement overlay */
+    #rotate-notice {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    #rotate-notice p:first-child {
+      font-size: 48px;
+    }
+
+    #rotate-notice p:last-child {
+      font-size: 18px;
+      color: #0ff;
+      letter-spacing: 4px;
+    }
+
+    @media (orientation: portrait) and (max-width: 1024px) {
+      #rotate-notice { display: flex; }
     }
 
     canvas {
@@ -398,6 +432,29 @@
       50% { opacity: 0; }
     }
 
+    /* Fullscreen prompt button */
+    #fs-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: transparent;
+      border: 1px solid rgba(0,255,255,0.35);
+      color: rgba(0,255,255,0.6);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 5px 12px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: none;
+      z-index: 100;
+    }
+
+    #fs-btn:hover {
+      border-color: #0ff;
+      color: #0ff;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
@@ -411,6 +468,10 @@
   </style>
 </head>
 <body>
+  <div id="rotate-notice">
+    <p>↻</p>
+    <p>ROTATE TO LANDSCAPE</p>
+  </div>
   <div id="app">
     <canvas id="game-canvas"></canvas>
     <div id="ui-overlay" class="interactive">
@@ -433,6 +494,7 @@
 
       <!-- Lobby -->
       <div class="screen" id="lobby-screen">
+        <button class="btn" id="touch-toggle-btn" style="position:absolute; top:12px; right:12px; font-size:12px; padding:4px 14px; margin:0;">TOUCH: OFF</button>
         <h1>DEATH TANK</h1>
         <p class="subtitle">TRIBUTE</p>
         <div style="display:flex; gap:20px;">
@@ -523,6 +585,9 @@
         <button class="btn primary" id="play-again-btn">BACK TO LOBBY</button>
       </div>
 
+      <!-- Fullscreen prompt (hidden on iOS Safari and when already fullscreen) -->
+      <button id="fs-btn">⛶ FULLSCREEN</button>
+
       <!-- In-game HUD overlays (always on top of canvas) -->
       <div id="kill-feed"></div>
       <div id="chat-box"></div>
@@ -534,5 +599,38 @@
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
+  <script>
+    (function () {
+      const btn = document.getElementById('fs-btn');
+      const el  = document.documentElement;
+
+      // Normalise across vendor prefixes
+      const requestFs = el.requestFullscreen?.bind(el)
+                     || el.webkitRequestFullscreen?.bind(el);
+      const fsChangeEvt = 'onfullscreenchange' in document
+                        ? 'fullscreenchange'
+                        : 'webkitfullscreenchange';
+      const getFs = () => document.fullscreenElement
+                       || document.webkitFullscreenElement;
+
+      // No Fullscreen API (iOS Safari) — hide the button entirely
+      if (!requestFs) return;
+
+      function sync() {
+        btn.style.display = getFs() ? 'none' : 'block';
+      }
+
+      btn.addEventListener('click', () => requestFs().catch(() => {}));
+      document.addEventListener(fsChangeEvt, sync);
+      sync();
+
+      // Auto-prompt on first touch (mobile) — browsers allow requestFullscreen
+      // inside a touch/click handler without requiring it to be the exact target
+      document.addEventListener('touchstart', function tryAuto() {
+        if (!getFs()) requestFs().catch(() => {});
+        document.removeEventListener('touchstart', tryAuto);
+      }, { once: true, passive: true });
+    })();
+  </script>
 </body>
 </html>
