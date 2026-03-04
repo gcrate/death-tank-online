@@ -76,6 +76,7 @@ export class Game {
   // Chat
   private chatOpen: boolean = false;
   private chatInput: HTMLInputElement | null = null;
+  private scoreSkipBtn: HTMLButtonElement | null = null;
 
   constructor() {
     const wsUrl = `ws://${window.location.hostname}:8080`;
@@ -92,6 +93,7 @@ export class Game {
     this.setupNetworkHandlers();
     this.setupUICallbacks();
     this.setupChatHandlers();
+    this.setupScoreSkip();
   }
 
   async init(): Promise<void> {
@@ -181,21 +183,6 @@ export class Game {
       this.network.send({ type: 'LEAVE_ROOM' });
     };
 
-    // Touch controls toggle button in lobby
-    const touchBtn = document.getElementById('touch-toggle-btn') as HTMLButtonElement | null;
-    if (touchBtn) {
-      const syncBtn = () => {
-        const on = this.touch.isEnabled();
-        touchBtn.textContent = `TOUCH: ${on ? 'ON' : 'OFF'}`;
-        touchBtn.style.borderColor = on ? '#0f0' : '';
-        touchBtn.style.color       = on ? '#0f0' : '';
-      };
-      syncBtn();
-      touchBtn.addEventListener('click', () => {
-        this.touch.setEnabled(!this.touch.isEnabled());
-        syncBtn();
-      });
-    }
   }
 
   private setupChatHandlers(): void {
@@ -234,6 +221,17 @@ export class Game {
         if (chatRow) chatRow.style.display = 'none';
         this.chatInput!.blur();
       }
+    });
+  }
+
+  private setupScoreSkip(): void {
+    if (!this.touch.isEnabled()) return;
+    this.scoreSkipBtn = document.getElementById('score-skip-btn') as HTMLButtonElement;
+    this.scoreSkipBtn?.addEventListener('click', () => {
+      if (this.phase !== 'score_screen' || this.scoreScreen.mySkipped) return;
+      this.scoreScreen.mySkipped = true;
+      this.network.send({ type: 'SKIP_SCORE' });
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
     });
   }
 
@@ -450,6 +448,7 @@ export class Game {
         startTime: performance.now(),
         mySkipped: false,
       };
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'block';
     });
 
     this.network.on('SHOP_OPEN', (msg) => {
@@ -479,6 +478,7 @@ export class Game {
         }
       }
 
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
       this.ui.showScreen('shop');
       this.ui.openShop(msg.payload, this.localId, this.localInventory.items, this.localInventory.weapons);
       this.audio.playMusic('music_shop');
@@ -486,6 +486,7 @@ export class Game {
 
     this.network.on('GAME_OVER', (msg) => {
       this.phase = 'gameover';
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
       this.ui.stopShopTimer();
       this.ui.showScreen('gameover');
       this.ui.showGameOver(msg.payload);

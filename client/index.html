@@ -494,8 +494,7 @@
 
       <!-- Lobby -->
       <div class="screen" id="lobby-screen">
-        <button class="btn" id="touch-toggle-btn" style="position:absolute; top:12px; right:12px; font-size:12px; padding:4px 14px; margin:0;">TOUCH: OFF</button>
-        <h1>DEATH TANK</h1>
+<h1>DEATH TANK</h1>
         <p class="subtitle">TRIBUTE</p>
         <div style="display:flex; gap:20px;">
           <div class="panel">
@@ -564,10 +563,8 @@
           <div class="shop-category">
             <h3>ITEMS</h3>
             <div id="items-list"></div>
+            <button class="btn primary" id="shop-ready-btn" style="margin-top:8px; width:100%;">READY (skip)</button>
           </div>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-          <button class="btn primary" id="shop-ready-btn">READY (skip)</button>
         </div>
         <div id="timer-bar" style="width:100%;"></div>
       </div>
@@ -587,6 +584,9 @@
 
       <!-- Fullscreen prompt (hidden on iOS Safari and when already fullscreen) -->
       <button id="fs-btn">⛶ FULLSCREEN</button>
+
+      <!-- Touch skip button (shown on score screen for touch devices) -->
+      <button class="btn" id="score-skip-btn" style="display:none; position:absolute; bottom:55px; left:50%; transform:translateX(-50%); font-size:20px; padding:12px 48px; margin:0;">SKIP</button>
 
       <!-- In-game HUD overlays (always on top of canvas) -->
       <div id="kill-feed"></div>

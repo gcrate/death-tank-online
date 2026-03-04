@@ -12,20 +12,18 @@ interface TouchZone {
 
 const ZONES: Omit<TouchZone, 'active'>[] = [
   // Left side — movement
-  { id: 'left',    x: 10,   y: 578, w: 112, h: 132, label: '◄ MOVE' },
-  { id: 'right',   x: 130,  y: 578, w: 112, h: 132, label: 'MOVE ►' },
+  { id: 'left',    x: 10,   y: 578, w: 112, h: 66, label: '◄ MOVE' },
+  { id: 'right',   x: 130,  y: 578, w: 112, h: 66, label: 'MOVE ►' },
 
   // Right side — weapon cycle (top row)
-  { id: 'wpnprev', x: 1005, y: 498, w: 83,  h: 52,  label: '◄ WPN'  },
-  { id: 'wpnnext', x: 1095, y: 498, w: 83,  h: 52,  label: 'WPN ►'  },
+  // Above move buttons — weapon cycle
+  { id: 'wpnnext', x: 10, y: 522, w: 232, h: 50, label: 'WPN ►' },
 
-  // Right side — aim column
-  { id: 'aimup',   x: 1005, y: 556, w: 83,  h: 64,  label: '← AIM'  },
-  { id: 'aimdown', x: 1005, y: 627, w: 83,  h: 83,  label: 'AIM →'  },
-
-  // Right side — power column
-  { id: 'pwrup',   x: 1095, y: 556, w: 83,  h: 64,  label: 'PWR +'  },
-  { id: 'pwrdown', x: 1095, y: 627, w: 83,  h: 83,  label: 'PWR -'  },
+  // Right side — d-pad (UP/DOWN = power, LEFT/RIGHT = aim)
+  { id: 'pwrup',   x: 1059, y: 552, w: 62,  h: 54,  label: 'PWR +'  },
+  { id: 'aimup',   x:  997, y: 606, w: 62,  h: 54,  label: '← AIM'  },
+  { id: 'aimdown', x: 1121, y: 606, w: 62,  h: 54,  label: 'AIM →'  },
+  { id: 'pwrdown', x: 1059, y: 660, w: 62,  h: 54,  label: 'PWR -'  },
 
   // Right side — jump / fire
   { id: 'jump',    x: 1185, y: 556, w: 90,  h: 64,  label: 'JUMP'   },
@@ -41,25 +39,16 @@ export class TouchController {
   // Maps touch identifier → zone id currently owned by that finger
   private activeTouches: Map<number, string> = new Map();
 
+  isEnabled(): boolean { return this.enabled; }
+
   constructor(canvas: HTMLCanvasElement, input: InputHandler) {
     this.canvas = canvas;
     this.input  = input;
-    this.enabled = localStorage.getItem('touchControlsEnabled') === 'true';
+    // Auto-enable on touch/coarse-pointer devices (phones, tablets)
+    this.enabled = window.matchMedia('(pointer: coarse)').matches
+                || navigator.maxTouchPoints > 0;
     this.zones   = ZONES.map(z => ({ ...z, active: false }));
     this.setupListeners();
-  }
-
-  isEnabled(): boolean { return this.enabled; }
-
-  setEnabled(value: boolean): void {
-    this.enabled = value;
-    localStorage.setItem('touchControlsEnabled', value ? 'true' : 'false');
-    if (!value) {
-      // Reset all state so nothing is stuck
-      for (const z of this.zones) z.active = false;
-      this.activeTouches.clear();
-      this.syncFlags();
-    }
   }
 
   // Call once per frame before InputHandler.update() while playing
@@ -199,7 +188,6 @@ export class TouchController {
 
   // Fired exactly once when a finger first lands on a zone
   private onZoneDown(id: string): void {
-    if (id === 'wpnprev') this.input.cycleWeaponPrev();
     if (id === 'wpnnext') this.input.cycleWeaponNext();
   }
 }
