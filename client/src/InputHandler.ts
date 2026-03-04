@@ -14,6 +14,16 @@ export class InputHandler {
   onWeaponPrev: (() => void) | null = null;
   onChatOpen: (() => void) | null = null;
 
+  // Touch state — set by TouchController each frame before update()
+  touchLeft     = false;
+  touchRight    = false;
+  touchAimUp    = false;
+  touchAimDown  = false;
+  touchPowerUp  = false;
+  touchPowerDown= false;
+  touchFire     = false;
+  touchJump     = false;
+
   constructor() {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') {
@@ -47,10 +57,10 @@ export class InputHandler {
     // Check gamepad
     const gamepad = this.gamepadIndex !== null ? navigator.getGamepads()[this.gamepadIndex] : null;
 
-    // Movement: Q/E
+    // Movement: Q/E or touch
     let moveDirection: -1 | 0 | 1 = 0;
-    if (this.keys.has('KeyQ')) moveDirection = -1;
-    if (this.keys.has('KeyE')) moveDirection = 1;
+    if (this.keys.has('KeyQ') || this.touchLeft)  moveDirection = -1;
+    if (this.keys.has('KeyE') || this.touchRight) moveDirection = 1;
     if (gamepad) {
       const leftStickX = gamepad.axes[0];
       const dpadLeft = gamepad.buttons[14]?.pressed;
@@ -59,14 +69,14 @@ export class InputHandler {
       if (leftStickX > 0.3 || dpadRight) moveDirection = 1;
     }
 
-    // Aiming: Left/Right arrows or A/D
+    // Aiming: Left/Right arrows or A/D or touch
     const aimSpeed = 90 * deltaTime;  // Degrees per second
     let aimDirection: -1 | 0 | 1 = 0;
-    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) {
+    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft') || this.touchAimUp) {
       this.aimAngle = Math.min(200, this.aimAngle + aimSpeed);
       aimDirection = 1;
     }
-    if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) {
+    if (this.keys.has('KeyD') || this.keys.has('ArrowRight') || this.touchAimDown) {
       this.aimAngle = Math.max(-20, this.aimAngle - aimSpeed);
       aimDirection = -1;
     }
@@ -82,13 +92,13 @@ export class InputHandler {
       }
     }
 
-    // Power: Up/Down arrows or W/S
+    // Power: Up/Down arrows or W/S or touch
     const powerSpeed = 50 * deltaTime;
     const shiftHeld = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
-    if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) {
+    if (this.keys.has('KeyW') || this.keys.has('ArrowUp') || this.touchPowerUp) {
       this.power = Math.min(100, this.power + powerSpeed);
     }
-    if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) {
+    if (this.keys.has('KeyS') || this.keys.has('ArrowDown') || this.touchPowerDown) {
       this.power = Math.max(10, this.power - powerSpeed);
     }
     if (gamepad) {
@@ -109,10 +119,10 @@ export class InputHandler {
     }
 
     // Firing
-    const firing = this.keys.has('Space') || (gamepad?.buttons[0]?.pressed ?? false);
+    const firing = this.keys.has('Space') || (gamepad?.buttons[0]?.pressed ?? false) || this.touchFire;
 
-    // Jumping (hold shift, or gamepad B)
-    const jumping = shiftHeld || (gamepad?.buttons[1]?.pressed ?? false);
+    // Jumping (hold shift, or gamepad B, or touch)
+    const jumping = shiftHeld || (gamepad?.buttons[1]?.pressed ?? false) || this.touchJump;
 
     return {
       moveDirection,

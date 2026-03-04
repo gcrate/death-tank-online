@@ -5,6 +5,7 @@ import {
 import { NetworkClient } from './NetworkClient';
 import { Renderer } from './Renderer';
 import { InputHandler } from './InputHandler';
+import { TouchController } from './TouchController';
 import { ParticleSystem } from './ParticleSystem';
 import { AudioManager } from './AudioManager';
 import { UI } from './UI';
@@ -16,6 +17,7 @@ export class Game {
   private network: NetworkClient;
   private renderer: Renderer;
   private input: InputHandler;
+  private touch: TouchController;
   private particles: ParticleSystem;
   private audio: AudioManager;
   private ui: UI;
@@ -74,6 +76,7 @@ export class Game {
   // Chat
   private chatOpen: boolean = false;
   private chatInput: HTMLInputElement | null = null;
+  private scoreSkipBtn: HTMLButtonElement | null = null;
 
   constructor() {
     const wsUrl = `ws://${window.location.hostname}:8080`;
@@ -83,12 +86,14 @@ export class Game {
     this.particles = new ParticleSystem();
     this.renderer = new Renderer(canvas, this.particles);
     this.input = new InputHandler();
+    this.touch = new TouchController(canvas, this.input);
     this.audio = new AudioManager();
     this.ui = new UI();
 
     this.setupNetworkHandlers();
     this.setupUICallbacks();
     this.setupChatHandlers();
+    this.setupScoreSkip();
   }
 
   async init(): Promise<void> {
@@ -177,6 +182,7 @@ export class Game {
       this.phase = 'lobby';
       this.network.send({ type: 'LEAVE_ROOM' });
     };
+
   }
 
   private setupChatHandlers(): void {
@@ -215,6 +221,17 @@ export class Game {
         if (chatRow) chatRow.style.display = 'none';
         this.chatInput!.blur();
       }
+    });
+  }
+
+  private setupScoreSkip(): void {
+    if (!this.touch.isEnabled()) return;
+    this.scoreSkipBtn = document.getElementById('score-skip-btn') as HTMLButtonElement;
+    this.scoreSkipBtn?.addEventListener('click', () => {
+      if (this.phase !== 'score_screen' || this.scoreScreen.mySkipped) return;
+      this.scoreScreen.mySkipped = true;
+      this.network.send({ type: 'SKIP_SCORE' });
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
     });
   }
 
@@ -431,6 +448,7 @@ export class Game {
         startTime: performance.now(),
         mySkipped: false,
       };
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'block';
     });
 
     this.network.on('SHOP_OPEN', (msg) => {
@@ -460,6 +478,7 @@ export class Game {
         }
       }
 
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
       this.ui.showScreen('shop');
       this.ui.openShop(msg.payload, this.localId, this.localInventory.items, this.localInventory.weapons);
       this.audio.playMusic('music_shop');
@@ -467,6 +486,7 @@ export class Game {
 
     this.network.on('GAME_OVER', (msg) => {
       this.phase = 'gameover';
+      if (this.scoreSkipBtn) this.scoreSkipBtn.style.display = 'none';
       this.ui.stopShopTimer();
       this.ui.showScreen('gameover');
       this.ui.showGameOver(msg.payload);
@@ -514,6 +534,7 @@ export class Game {
     this.explosions = this.explosions.filter(e => (nowSec - e.startTime / 1000) < e.duration);
 
     if (this.phase === 'playing' && !this.chatOpen) {
+      this.touch.updateInputState();
       const inputState = this.input.update(deltaTime);
       this.lastMoveDirection = inputState.moveDirection;
 
@@ -619,6 +640,11 @@ export class Game {
           this.localId,
           this.scoreScreen.mySkipped
         );
+      }
+
+      // Touch controls overlay (only during active play)
+      if (this.phase === 'playing') {
+        this.touch.draw(this.renderer.ctx);
       }
 
       this.renderer.endFrame();
