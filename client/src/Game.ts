@@ -320,14 +320,13 @@ export class Game {
             w.ammo = tank.weaponAmmo[w.type] ?? 0;
           }
         }
-        // If the selected special weapon is now out of ammo, fall back to STD (slot 0)
-        const sel = this.input.selectedWeapon;
-        if (sel > 0) {
-          const selWeapon = this.localInventory.weapons[sel];
-          if (selWeapon && selWeapon.ammo === 0) {
-            this.input.selectedWeapon = 0;
-          }
-        }
+        // Remove depleted weapons and switch back to STD if needed
+        const selWeapon = this.localInventory.weapons[this.input.selectedWeapon];
+        const selType = selWeapon?.type;
+        this.localInventory.weapons = this.localInventory.weapons.filter(w => w.ammo === -1 || w.ammo > 0);
+        this.updateWeaponCount();
+        const newSel = selType ? this.localInventory.weapons.findIndex(w => w.type === selType) : -1;
+        this.input.selectedWeapon = newSel >= 0 ? newSel : 0;
       }
 
       // Detect blocked movement: pressing a direction but x didn't change

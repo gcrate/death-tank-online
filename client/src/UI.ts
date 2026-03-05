@@ -18,7 +18,7 @@ const ITEM_INFO: { type: ItemType; name: string; cost: number; desc: string }[] 
   { type: ItemType.CORBOMITE, name: 'Corbomite', cost: 25, desc: 'Death explosion (1x)' },
   { type: ItemType.JUMP_JETS, name: 'Jump Jets', cost: 50, desc: 'Enables flight' },
   { type: ItemType.TARGETING_COMPUTER, name: 'Target Computer', cost: 50, desc: 'Trajectory arc' },
-  { type: ItemType.SHIELD, name: 'Shield Upgrade', cost: 100, desc: '+50 max shield' },
+  { type: ItemType.SHIELD, name: 'Shield Upgrade', cost: 100, desc: '+50 max shield (1 round)' },
   { type: ItemType.HOVER_COIL, name: 'Hover Coil', cost: 125, desc: 'Fly 100px above terrain (1 round)' },
 ];
 

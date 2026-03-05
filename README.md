@@ -144,7 +144,7 @@ See [`bot/README.md`](bot/README.md) for setup instructions.
 | Jump Jets | $50 | +3s of jet fuel (stack up to 3×, max 9s). Remaining fuel carries over between rounds. Airborne: Q/E rotates body, Shift thrusts in the direction the tank top is pointing. |
 | Targeting Computer | $50 | Shows trajectory arc (consumed each round) |
 | Corbomite | $25 | On death, triggers an explosion (5 bomblets) |
-| Shield Upgrade | $100 | +50 max shield HP |
+| Shield Upgrade | $100 | +50 max shield HP (consumed each round) |
 | Hover Coil | $125 | Reduces fall speed |
 
 ---

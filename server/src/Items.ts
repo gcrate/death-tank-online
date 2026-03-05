@@ -22,7 +22,7 @@ export const ITEMS: Record<ItemType, ItemDefinition> = {
     name: 'Shield',
     cost: 100,
     effect: '+50 max shield capacity',
-    duration: 'permanent',
+    duration: 'per_round',
   },
   [ItemType.TARGETING_COMPUTER]: {
     type: ItemType.TARGETING_COMPUTER,
