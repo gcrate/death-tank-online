@@ -422,6 +422,7 @@ export class Room {
     for (const player of this.players.values()) {
       player.items.delete(ItemType.TARGETING_COMPUTER);
       player.items.delete(ItemType.HOVER_COIL);
+      player.items.delete(ItemType.SHIELD);
     }
 
     // Show score screen for 10 seconds, then open shop
