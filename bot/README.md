@@ -29,29 +29,36 @@ npm run build        # outputs dist/{interactions,start-server,stop-idle}/index.
 
 ### 3. Deploy infrastructure
 
+Create `bot/infra/terraform.tfvars` with your application ID and public key, both
+from **General Information** in the Discord Developer Portal. Neither is a secret
+— the public key only verifies inbound request signatures. This file is
+gitignored, so each deploy environment keeps its own copy.
+
+```hcl
+discord_application_id = "YOUR_APP_ID"
+discord_public_key     = "YOUR_PUBLIC_KEY"
+```
+
 ```bash
 cd bot/infra
 terraform init
-terraform apply -var="discord_application_id=YOUR_APP_ID"
+terraform apply
 ```
 
-Note the `api_gateway_url` output. Terraform creates placeholder SSM parameters for the Discord secrets — overwrite them with real values next.
+Note the `api_gateway_url` output. Terraform also creates a placeholder SSM
+parameter for the bot token — overwrite it with the real value next.
 
-### 4. Set secrets in SSM Parameter Store
+### 4. Set the bot token in SSM Parameter Store
 
 ```bash
 aws ssm put-parameter \
   --name /death-tank-bot/discord-bot-token \
   --value "YOUR_BOT_TOKEN" \
   --type SecureString --overwrite
-
-aws ssm put-parameter \
-  --name /death-tank-bot/discord-public-key \
-  --value "YOUR_PUBLIC_KEY" \
-  --type SecureString --overwrite
 ```
 
-The public key is in **General Information** on the Discord Developer Portal.
+The bot token is the only real secret here, so it stays in SSM rather than a
+Lambda environment variable.
 
 ### 5. Register slash commands
 
@@ -62,7 +69,7 @@ DISCORD_APPLICATION_ID=xxx DISCORD_BOT_TOKEN=xxx npm run register
 
 ### 6. Set the interactions endpoint
 
-In the Discord Developer Portal → **General Information** → **Interactions Endpoint URL**, paste the `api_gateway_url` from step 4.
+In the Discord Developer Portal → **General Information** → **Interactions Endpoint URL**, paste the `api_gateway_url` from step 3.
 
 Discord will send a PING to verify the endpoint. Once verified, the bot is live.
 
@@ -93,5 +100,5 @@ up the VPC subnet and security group by their `Name` tags (`death-tank-public`,
 
 ```bash
 cd bot && npm run build
-cd bot/infra && terraform apply -var="discord_application_id=YOUR_APP_ID"
+cd bot/infra && terraform apply
 ```

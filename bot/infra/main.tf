@@ -76,13 +76,6 @@ resource "aws_ssm_parameter" "discord_bot_token" {
   lifecycle { ignore_changes = [value] }
 }
 
-resource "aws_ssm_parameter" "discord_public_key" {
-  name  = "/death-tank-bot/discord-public-key"
-  type  = "SecureString"
-  value = "PLACEHOLDER"
-  lifecycle { ignore_changes = [value] }
-}
-
 # ── IAM ───────────────────────────────────────────────────────────────────────
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -133,14 +126,11 @@ data "aws_iam_policy_document" "bot_permissions" {
     resources = ["*"]
   }
 
-  # SSM — Discord secrets only
+  # SSM — Discord bot token only
   statement {
-    effect  = "Allow"
-    actions = ["ssm:GetParameter"]
-    resources = [
-      aws_ssm_parameter.discord_bot_token.arn,
-      aws_ssm_parameter.discord_public_key.arn,
-    ]
+    effect    = "Allow"
+    actions   = ["ssm:GetParameter"]
+    resources = [aws_ssm_parameter.discord_bot_token.arn]
   }
 
   # Lambda — interactions invokes start-server asynchronously
