@@ -71,6 +71,36 @@ export class Room {
     if (playerId === this.hostId && this.players.size > 0) {
       this.hostId = this.players.keys().next().value!;
     }
+
+    if (this.players.size === 0) return;  // GameServer deletes empty rooms
+
+    // Remove their tank so the round can end naturally instead of leaving
+    // an ownerless tank the survivors would have to destroy
+    if (this.state === 'playing' && this.engine) {
+      this.engine.tanks.delete(playerId);
+    }
+
+    // Re-check phase completion — the leaver may have been the last holdout
+    if (this.state === 'shopping') {
+      const allReady = Array.from(this.players.values()).every(p => p.ready);
+      if (allReady) {
+        if (this.shopTimer) {
+          clearTimeout(this.shopTimer);
+          this.shopTimer = null;
+        }
+        this.startNextRound();
+      }
+    } else if (this.state === 'score_screen') {
+      this.scoreSkipSet.delete(playerId);
+      const allSkipped = Array.from(this.players.keys()).every(id => this.scoreSkipSet.has(id));
+      if (allSkipped) {
+        if (this.scoreScreenTimer) {
+          clearTimeout(this.scoreScreenTimer);
+          this.scoreScreenTimer = null;
+        }
+        this.openShop();
+      }
+    }
   }
 
   allPlayersReady(): boolean {

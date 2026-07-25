@@ -120,7 +120,7 @@ export class GameServer {
           break;
         }
 
-        const activeRoomCount = Array.from(this.rooms.values()).filter(r => r.state !== 'ended').size;
+        const activeRoomCount = Array.from(this.rooms.values()).filter(r => r.state !== 'ended').length;
         if (activeRoomCount >= SERVER.MAX_ROOMS) {
           player.send({ type: 'ERROR', payload: { message: 'Server room limit reached' } });
           break;

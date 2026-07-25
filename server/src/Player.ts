@@ -15,9 +15,6 @@ export class Player {
   items: Set<ItemType> = new Set();
   jetFuelSeconds: number = 0;  // Actual seconds of fuel remaining; persists between rounds
 
-  // Total kills across all rounds (for game over screen)
-  totalKills: number = 0;
-
   constructor(id: string, name: string, ws: WebSocket) {
     this.id = id;
     this.name = name;
@@ -78,11 +75,5 @@ export class Player {
       weapons,
       items,
     };
-  }
-
-  // Reset for next round (keep inventory, reset ready state)
-  resetForRound(): void {
-    this.ready = false;
-    this.currentInput = null;
   }
 }

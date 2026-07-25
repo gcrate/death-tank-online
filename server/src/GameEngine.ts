@@ -300,6 +300,7 @@ export class GameEngine {
             }
 
             toDelete.push(id);
+            break;  // Mine is spent — don't detonate again for other tanks in range
           }
         }
       }
@@ -336,11 +337,11 @@ export class GameEngine {
       const levelingPhase = this.roundTime - GAME.WORLD_LEVELING_START;
 
       if (levelingPhase > 0) {
-        // Gradually flatten terrain
-        const flattenRate = 5 * deltaTime;  // Pixels per tick
+        // Gradually flatten terrain at 5 px/s
+        const flattenRate = 5 * deltaTime;
         this.terrain.flatten(flattenRate);
 
-        // Random explosions during phase 2 (15-25 seconds in)
+        // Random explosions 50-60 seconds into leveling (140-150s round time)
         if (levelingPhase > 50 && levelingPhase < 60 && Math.random() < 0.1) {
           const randomX = Math.random() * GAME.CANVAS_WIDTH;
           const randomY = this.terrain.getHeightAt(randomX) + Math.random() * 100;

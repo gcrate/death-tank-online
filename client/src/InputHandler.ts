@@ -10,8 +10,6 @@ export class InputHandler {
   selectedWeapon: number = 0;
   weaponCount: number = 1;
 
-  onWeaponNext: (() => void) | null = null;
-  onWeaponPrev: (() => void) | null = null;
   onChatOpen: (() => void) | null = null;
 
   // Touch state — set by TouchController each frame before update()
@@ -137,12 +135,10 @@ export class InputHandler {
 
   cycleWeaponNext(): void {
     this.selectedWeapon = (this.selectedWeapon + 1) % this.weaponCount;
-    this.onWeaponNext?.();
   }
 
   cycleWeaponPrev(): void {
     this.selectedWeapon = (this.selectedWeapon - 1 + this.weaponCount) % this.weaponCount;
-    this.onWeaponPrev?.();
   }
 
   setWeaponCount(count: number): void {
@@ -150,9 +146,5 @@ export class InputHandler {
     if (this.selectedWeapon >= this.weaponCount) {
       this.selectedWeapon = 0;
     }
-  }
-
-  isKeyDown(code: string): boolean {
-    return this.keys.has(code);
   }
 }

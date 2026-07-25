@@ -18,11 +18,11 @@ Or on Windows, run `restart.bat` to kill existing node processes and launch both
 
 Server: `ws://localhost:8080` | Client: `http://localhost:3000`
 
-### Build
+### Build / type-check
 
 ```bash
-cd server && npm run build   # tsc → dist/
-cd client && npm run build   # tsc + vite build
+cd server && npm run build   # tsc --noEmit type-check (runtime uses tsx, no emit)
+cd client && npm run build   # tsc type-check + vite build → dist/
 ```
 
 ### Install dependencies
@@ -62,7 +62,7 @@ The game uses a bottom-origin Y axis (Y=0 = ground level), but Canvas uses top-o
 
 `Terrain` stores a `Float32Array` of length 1280 (one height value per pixel column). The server sends the full heightmap on round start (`GAME_STARTING`). Subsequent changes are sent as `TERRAIN_UPDATE` (array of `{ x, y, radius }` destruction events), which the client applies locally.
 
-World leveling begins at 60 seconds: terrain flattens at 5px/tick. At 90 seconds, all remaining tanks take continuous damage.
+World leveling begins at 90 seconds (`WORLD_LEVELING_START`): terrain flattens at 5 px/s, with random explosions during the 140-150s window. At 200 seconds (`ROUND_TIME_LIMIT`), all remaining tanks take continuous damage (10 HP/s).
 
 ### Key constants
 
@@ -70,7 +70,7 @@ All game tuning values live in `server/src/constants.ts` — `GAME`, `PHYSICS`, 
 
 ### Room state machine
 
-`Room.state`: `'lobby'` → `'playing'` → `'shopping'` → back to `'playing'` (next round) or `'ended'`.
+`Room.state`: `'lobby'` → `'playing'` → `'score_screen'` (10s, skippable) → `'shopping'` → back to `'playing'` (next round) or `'ended'`.
 
 The shop timer is a `setTimeout` of 30s. If all players send `SHOP_READY` before it fires, `Room.handleShopReady()` calls `startNextRound()` immediately and clears the timer.
 

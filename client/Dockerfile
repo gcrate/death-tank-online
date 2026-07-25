@@ -19,9 +19,8 @@ COPY client/tsconfig.json   ./client/
 COPY client/src/            ./client/src/
 COPY client/public/         ./client/public/
 
-# Build with Vite (skips the separate tsc type-check step that has
-# rootDir issues with shared/ — Vite's bundler handles TS directly)
-RUN cd client && npx vite build
+# Type-check with tsc, then bundle with Vite
+RUN cd client && npm run build
 
 # ---- Runtime image ----
 FROM nginx:1.25-alpine

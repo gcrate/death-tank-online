@@ -1,8 +1,7 @@
 # Build context must be the repo root:
 #   docker build -f server/Dockerfile -t death-tank-server .
 #
-# Uses tsx to run TypeScript directly — avoids tsc rootDir issues
-# with the shared/ directory that lives outside server/src/.
+# Uses tsx to run TypeScript directly — no build step needed.
 
 FROM node:20-alpine
 

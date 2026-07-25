@@ -98,11 +98,11 @@ export class Tank {
     if (ammo !== -1) {
       this.inventory.set(weapon, ammo - 1);
       if (ammo - 1 <= 0) {
+        // Depleted: remove weapon and its charge entry, switch to standard
         this.inventory.delete(weapon);
-        // Remove charge entry too
         this.weaponCharges.delete(weapon);
-        // Switch to standard if out of ammo
         this.currentWeaponIndex = 0;
+        return { canFire: true, weapon };
       }
     }
 

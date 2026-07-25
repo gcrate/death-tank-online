@@ -754,34 +754,6 @@ export class Renderer {
     this.ctx.restore();
   }
 
-  drawRoundResult(winnerId: string | null, winnerName: string): void {
-    this.ctx.save();
-    this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    this.ctx.fillRect(0, CANVAS_HEIGHT / 2 - 60, CANVAS_WIDTH, 100);
-
-    this.ctx.font = 'bold 48px monospace';
-    this.ctx.textAlign = 'center';
-
-    if (winnerId === null) {
-      this.ctx.fillStyle = '#ff8800';
-      this.ctx.fillText('DRAW!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-    } else {
-      this.ctx.fillStyle = '#ff0';
-      this.ctx.fillText(`${winnerName} WINS!`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-    }
-    this.ctx.restore();
-  }
-
-  drawDeathAnnouncement(text: string, alpha: number): void {
-    this.ctx.save();
-    this.ctx.globalAlpha = alpha;
-    this.ctx.font = 'bold 36px monospace';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillStyle = '#f00';
-    this.ctx.fillText(text, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100);
-    this.ctx.restore();
-  }
-
   drawScoreScreen(
     players: PlayerInfo[],
     kills: { [killerId: string]: string[] },

@@ -1,6 +1,6 @@
 import {
-  ServerMessage, GameState, PlayerInfo, RoomState, ShopPayload,
-  ItemType, WeaponType, TankState, RoomConfig, RoundEarnings,
+  GameState, PlayerInfo, RoomState,
+  ItemType, WeaponType, RoundEarnings,
 } from '../../shared/protocol';
 import { NetworkClient } from './NetworkClient';
 import { Renderer } from './Renderer';
@@ -31,7 +31,6 @@ export class Game {
   private gameState: GameState | null = null;
   private players: PlayerInfo[] = [];
   private localRoom: RoomState | null = null;
-  private shopPayload: ShopPayload | null = null;
   private localInventory: { weapons: { type: WeaponType; ammo: number }[]; items: ItemType[] } = {
     weapons: [], items: [],
   };
@@ -51,10 +50,6 @@ export class Game {
   private showBlitz: boolean = false;
   private groovyTime: number = 0;
   private showGroovy: boolean = false;
-  private roundResultTime: number = 0;
-  private roundResultWinner: string | null = null;
-  private roundResultName: string = '';
-  private showRoundResult: boolean = false;
   private firedProjectileIds: Set<string> = new Set();
 
   // Score screen
@@ -267,7 +262,6 @@ export class Game {
       this.isBlitz = isBlitz;
       this.explosions = [];
       this.particles.clear();
-      this.showRoundResult = false;
       this.showGroovy = false;
       this.gameState = null;
       this.lastTankX = null;
@@ -437,7 +431,6 @@ export class Game {
 
       // Enter score screen phase
       this.phase = 'score_screen';
-      this.showRoundResult = false;
       this.scoreScreen = {
         active: true,
         winnerId,
@@ -451,9 +444,7 @@ export class Game {
     });
 
     this.network.on('SHOP_OPEN', (msg) => {
-      this.shopPayload = msg.payload;
       this.phase = 'shop';
-      this.showRoundResult = false;
       this.scoreScreen.active = false;
 
       // Strip depleted weapons and per-round items (mirrors server endRound cleanup)
@@ -620,10 +611,6 @@ export class Game {
 
       if (this.showGroovy) {
         this.renderer.drawGroovy();
-      }
-
-      if (this.showRoundResult && (nowSec - this.roundResultTime) < 4) {
-        this.renderer.drawRoundResult(this.roundResultWinner, this.roundResultName);
       }
 
       // Score screen overlay
