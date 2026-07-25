@@ -49,7 +49,7 @@ locals {
   region       = data.aws_region.current.name
   account_id   = data.aws_caller_identity.current.account_id
   # Stable key used as DynamoDB partition key — one record per region
-  server_id    = "${var.app_name}-${data.aws_region.current.name}"
+  server_id = "${var.app_name}-${data.aws_region.current.name}"
 }
 
 # ── DynamoDB table ────────────────────────────────────────────────────────────
@@ -102,15 +102,15 @@ resource "aws_iam_role_policy_attachment" "basic_execution" {
 data "aws_iam_policy_document" "bot_permissions" {
   # DynamoDB — game-servers table only
   statement {
-    effect  = "Allow"
-    actions = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
+    effect    = "Allow"
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
     resources = [aws_dynamodb_table.game_servers.arn]
   }
 
   # ECS — start, stop, describe tasks; scale service
   statement {
-    effect  = "Allow"
-    actions = ["ecs:UpdateService", "ecs:ListTasks", "ecs:DescribeTasks", "ecs:StopTask"]
+    effect    = "Allow"
+    actions   = ["ecs:UpdateService", "ecs:ListTasks", "ecs:DescribeTasks", "ecs:StopTask"]
     resources = ["*"]
     condition {
       test     = "ArnEquals"
