@@ -188,11 +188,12 @@ resource "aws_lambda_function" "interactions" {
   filename         = data.archive_file.interactions.output_path
   source_code_hash = data.archive_file.interactions.output_base64sha256
   timeout          = 10
-  memory_size      = 128
+  memory_size      = 512
 
   environment {
     variables = {
       DISCORD_APPLICATION_ID   = var.discord_application_id
+      DISCORD_PUBLIC_KEY       = var.discord_public_key
       DYNAMODB_TABLE           = aws_dynamodb_table.game_servers.name
       SERVER_ID                = local.server_id
       ECS_CLUSTER_NAME         = local.cluster_name
