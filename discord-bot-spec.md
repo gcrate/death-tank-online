@@ -259,7 +259,9 @@ Should create:
 - Lambda functions (interactions, start-server, stop-idle) with appropriate IAM roles
 - DynamoDB table
 - EventBridge scheduled rule for stop-idle
-- SSM Parameter Store entries for secrets (Discord tokens) — Lambda reads at runtime
+- SSM Parameter Store entry for the bot token — stop-idle reads it at runtime. The
+  public key is not a secret, so it is passed to the interactions Lambda as an
+  environment variable instead, avoiding an SSM call on every cold start.
 - Outputs: API Gateway invoke URL (used for Discord webhook registration)
 
 Reference existing infra outputs (local state):
@@ -284,9 +286,17 @@ data "terraform_remote_state" "infra" {
 
 ### 2. Configure Secrets
 ```bash
-# Store in SSM Parameter Store (Terraform can create these as placeholders)
+# Store in SSM Parameter Store (Terraform creates this as a placeholder)
 aws ssm put-parameter --name /death-tank-bot/discord-bot-token --value "YOUR_TOKEN" --type SecureString
-aws ssm put-parameter --name /death-tank-bot/discord-public-key --value "YOUR_KEY" --type SecureString
+```
+
+The application ID and public key are not secrets — set them in
+`bot/infra/terraform.tfvars` (gitignored) and Terraform passes them to the
+Lambdas as environment variables:
+
+```hcl
+discord_application_id = "YOUR_APP_ID"
+discord_public_key     = "YOUR_PUBLIC_KEY"
 ```
 
 ### 3. Deploy Infrastructure
