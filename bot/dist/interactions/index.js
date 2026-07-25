@@ -2265,7 +2265,6 @@ var import_client_dynamodb = require("@aws-sdk/client-dynamodb");
 var import_util_dynamodb = require("@aws-sdk/util-dynamodb");
 var import_client_ecs = require("@aws-sdk/client-ecs");
 var import_client_lambda = require("@aws-sdk/client-lambda");
-var import_client_ssm = require("@aws-sdk/client-ssm");
 var PING = 1;
 var APPLICATION_COMMAND = 2;
 var PONG = 1;
@@ -2274,7 +2273,6 @@ var DEFERRED_CHANNEL_MESSAGE = 5;
 var dynamo = new import_client_dynamodb.DynamoDBClient({});
 var ecs = new import_client_ecs.ECSClient({});
 var lambda = new import_client_lambda.LambdaClient({});
-var ssm = new import_client_ssm.SSMClient({});
 var TABLE = process.env.DYNAMODB_TABLE;
 var SERVER_ID = process.env.SERVER_ID;
 var CLUSTER = process.env.ECS_CLUSTER_NAME;
@@ -2282,15 +2280,7 @@ var SERVICE = process.env.ECS_SERVICE_NAME;
 var APPLICATION_ID = process.env.DISCORD_APPLICATION_ID;
 var START_SERVER_LAMBDA = process.env.START_SERVER_LAMBDA_NAME;
 var GAME_PORT = process.env.GAME_PORT ?? "80";
-var cachedPublicKey;
-async function getPublicKey() {
-  if (cachedPublicKey) return cachedPublicKey;
-  const { Parameter } = await ssm.send(
-    new import_client_ssm.GetParameterCommand({ Name: "/death-tank-bot/discord-public-key", WithDecryption: true })
-  );
-  cachedPublicKey = Buffer.from(Parameter.Value, "hex");
-  return cachedPublicKey;
-}
+var PUBLIC_KEY = Buffer.from(process.env.DISCORD_PUBLIC_KEY, "hex");
 function ok(body) {
   return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 }
@@ -2380,11 +2370,10 @@ var handler = async (event) => {
   if (!sig || !ts) {
     return { statusCode: 401, body: "Missing signature headers" };
   }
-  const publicKey = await getPublicKey();
   const valid = import_tweetnacl.default.sign.detached.verify(
     Buffer.from(ts + body),
     Buffer.from(sig, "hex"),
-    publicKey
+    PUBLIC_KEY
   );
   if (!valid) {
     return { statusCode: 401, body: "Invalid request signature" };

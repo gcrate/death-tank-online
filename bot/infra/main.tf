@@ -49,7 +49,7 @@ locals {
   region       = data.aws_region.current.name
   account_id   = data.aws_caller_identity.current.account_id
   # Stable key used as DynamoDB partition key — one record per region
-  server_id    = "${var.app_name}-${data.aws_region.current.name}"
+  server_id = "${var.app_name}-${data.aws_region.current.name}"
 }
 
 # ── DynamoDB table ────────────────────────────────────────────────────────────
@@ -71,13 +71,6 @@ resource "aws_dynamodb_table" "game_servers" {
 
 resource "aws_ssm_parameter" "discord_bot_token" {
   name  = "/death-tank-bot/discord-bot-token"
-  type  = "SecureString"
-  value = "PLACEHOLDER"
-  lifecycle { ignore_changes = [value] }
-}
-
-resource "aws_ssm_parameter" "discord_public_key" {
-  name  = "/death-tank-bot/discord-public-key"
   type  = "SecureString"
   value = "PLACEHOLDER"
   lifecycle { ignore_changes = [value] }
@@ -109,15 +102,15 @@ resource "aws_iam_role_policy_attachment" "basic_execution" {
 data "aws_iam_policy_document" "bot_permissions" {
   # DynamoDB — game-servers table only
   statement {
-    effect  = "Allow"
-    actions = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
+    effect    = "Allow"
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
     resources = [aws_dynamodb_table.game_servers.arn]
   }
 
   # ECS — start, stop, describe tasks; scale service
   statement {
-    effect  = "Allow"
-    actions = ["ecs:UpdateService", "ecs:ListTasks", "ecs:DescribeTasks", "ecs:StopTask"]
+    effect    = "Allow"
+    actions   = ["ecs:UpdateService", "ecs:ListTasks", "ecs:DescribeTasks", "ecs:StopTask"]
     resources = ["*"]
     condition {
       test     = "ArnEquals"
@@ -133,14 +126,11 @@ data "aws_iam_policy_document" "bot_permissions" {
     resources = ["*"]
   }
 
-  # SSM — Discord secrets only
+  # SSM — Discord bot token only
   statement {
-    effect  = "Allow"
-    actions = ["ssm:GetParameter"]
-    resources = [
-      aws_ssm_parameter.discord_bot_token.arn,
-      aws_ssm_parameter.discord_public_key.arn,
-    ]
+    effect    = "Allow"
+    actions   = ["ssm:GetParameter"]
+    resources = [aws_ssm_parameter.discord_bot_token.arn]
   }
 
   # Lambda — interactions invokes start-server asynchronously
@@ -188,11 +178,12 @@ resource "aws_lambda_function" "interactions" {
   filename         = data.archive_file.interactions.output_path
   source_code_hash = data.archive_file.interactions.output_base64sha256
   timeout          = 10
-  memory_size      = 128
+  memory_size      = 512
 
   environment {
     variables = {
       DISCORD_APPLICATION_ID   = var.discord_application_id
+      DISCORD_PUBLIC_KEY       = var.discord_public_key
       DYNAMODB_TABLE           = aws_dynamodb_table.game_servers.name
       SERVER_ID                = local.server_id
       ECS_CLUSTER_NAME         = local.cluster_name

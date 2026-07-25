@@ -15,7 +15,6 @@ import {
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { ECSClient, UpdateServiceCommand, StopTaskCommand } from "@aws-sdk/client-ecs";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
 // Discord interaction/response type constants
 const PING = 1;
@@ -27,8 +26,6 @@ const DEFERRED_CHANNEL_MESSAGE = 5;
 const dynamo = new DynamoDBClient({});
 const ecs = new ECSClient({});
 const lambda = new LambdaClient({});
-const ssm = new SSMClient({});
-
 const TABLE = process.env.DYNAMODB_TABLE!;
 const SERVER_ID = process.env.SERVER_ID!;
 const CLUSTER = process.env.ECS_CLUSTER_NAME!;
@@ -37,17 +34,8 @@ const APPLICATION_ID = process.env.DISCORD_APPLICATION_ID!;
 const START_SERVER_LAMBDA = process.env.START_SERVER_LAMBDA_NAME!;
 const GAME_PORT = process.env.GAME_PORT ?? "80";
 
-// Cached across warm invocations to avoid repeated SSM calls
-let cachedPublicKey: Uint8Array | undefined;
-
-async function getPublicKey(): Promise<Uint8Array> {
-  if (cachedPublicKey) return cachedPublicKey;
-  const { Parameter } = await ssm.send(
-    new GetParameterCommand({ Name: "/death-tank-bot/discord-public-key", WithDecryption: true })
-  );
-  cachedPublicKey = Buffer.from(Parameter!.Value!, "hex");
-  return cachedPublicKey;
-}
+// Public key is not sensitive — read directly from env to avoid SSM latency on cold starts
+const PUBLIC_KEY = Buffer.from(process.env.DISCORD_PUBLIC_KEY!, "hex");
 
 function ok(body: unknown): APIGatewayProxyResultV2 {
   return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
@@ -175,11 +163,10 @@ export const handler = async (
     return { statusCode: 401, body: "Missing signature headers" };
   }
 
-  const publicKey = await getPublicKey();
   const valid = nacl.sign.detached.verify(
     Buffer.from(ts + body),
     Buffer.from(sig, "hex"),
-    publicKey
+    PUBLIC_KEY
   );
   if (!valid) {
     return { statusCode: 401, body: "Invalid request signature" };

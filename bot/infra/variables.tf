@@ -15,6 +15,11 @@ variable "discord_application_id" {
   type        = string
 }
 
+variable "discord_public_key" {
+  description = "Discord app public key for Ed25519 signature verification (non-sensitive, visible in Developer Portal)"
+  type        = string
+}
+
 variable "game_port" {
   description = "Port players connect to via browser (nginx serving the client)"
   type        = number
